@@ -23,20 +23,20 @@
 #endif
 
 #ifndef ERR_EXITFUNC
-void ERR_SETUPNAMEPRE(ERR_PREFIX, ExitFunc)(uint32_t ErrorID) {exit((int32_t)ErrorID);}
-#define ERR_EXITFUNC &ERR_SETUPNAMEINT(ERR_PREFIX, ExitFunc)
+void ERR_SETUPNAMEPRE(ERR_PREFIX, ExitFunc)(uint32_t ErrorID) {exit((int32_t)ErrorID);} // Default exit function
+#define ERR_EXITFUNC &ERR_SETUPNAMEPRE(ERR_PREFIX, ExitFunc)
 #endif
 
 #ifndef ERR_THRESHOLD
-#define ERR_THRESHOLD 3
+#define ERR_THRESHOLD 3 // What error type should run the exit function
 #endif
 
 #ifndef ERR_MERGE
-#define ERR_MERGE " -> "
+#define ERR_MERGE " -> " // How to merge error messages
 #endif
 
 #ifndef ERR_ERRORTYPE_MASK
-#define ERR_ERRORTYPE_MASK 0x0000FF00
+#define ERR_ERRORTYPE_MASK 0x0000FF00 // The mask for finding the error type
 #endif
 
 // No error: 0
@@ -45,7 +45,7 @@ void ERR_SETUPNAMEPRE(ERR_PREFIX, ExitFunc)(uint32_t ErrorID) {exit((int32_t)Err
 // Fatal: 3
 
 #ifndef ERR_ERRORTYPE_REDUCE
-#define ERR_ERRORTYPE_REDUCE 0x00000100
+#define ERR_ERRORTYPE_REDUCE 0x00000100 // How to reduce an ID to get the error type
 #endif
 
 // Gets the error message
@@ -103,7 +103,7 @@ void ERR_SETUPNAMEPRE(ERR_PREFIX, ExitFunc)(uint32_t ErrorID) {exit((int32_t)Err
 // Returns the error message and NULL if there were none
 #define ERR_GETARCHIVEDERROR ERR_SETUPNAME(ERR_PREFIX, GetArchivedError)
 
-// The worst error type that has yet occured
+// The worst error type that has occured
 #define ERR_ERRORTYPE ERR_SETUPNAMEPRE(ERR_PREFIX, ErrorType)
 
 // Gets the worst error type that has occured
@@ -195,7 +195,7 @@ char *ERR_GETERROR(void)
     extern char ERR_CURRENTMES[];
     extern char ERR_RETURNMES[];
 
-    strncpy(ERR_RETURNMES, ERR_CURRENTMES, ERR_MAXLENGTH);
+    snprintf(ERR_RETURNMES, ERR_MAXLENGTH, "%s", ERR_CURRENTMES);
 
     return ERR_RETURNMES;
 }
@@ -221,12 +221,12 @@ void ERR_ADDERROR(uint32_t ErrorID, const char *Format, ...)
     va_start(VarArgs, Format);
 
     // Add the previous error message
-    snprintf(ERR_TEMPMES, ERR_MAXLENGTH, "%s%s%s", Format, ERR_MERGE, ERR_GETERROR());
+    snprintf(ERR_TEMPMES, ERR_MAXLENGTH, "%s%s%s", Format, ERR_MERGE, ERR_CURRENTMES);
 
     // Add a % if there is a % in previous error message
-    for (char *String = ERR_TEMPMES + strlen(Format) + strlen(ERR_MERGE), *EndString = ERR_TEMPMES + strlen(ERR_TEMPMES); String < EndString && String - ERR_TEMPMES < ERR_MAXLENGTH; ++String)
+    for (char *String = ERR_TEMPMES + strlen(ERR_TEMPMES) - 1, *EndString = ERR_TEMPMES + strlen(Format) + strlen(ERR_MERGE) - 1; String > EndString; --String)
         if (*String == '%')
-            for (char Character = '%', CharacterTemp, *TempString = ++String; TempString < EndString && TempString - ERR_TEMPMES < ERR_MAXLENGTH; ++TempString)
+            for (char Character = '%', CharacterTemp, *TempString = ++String, EndTempString = String + strlen(String); TempString < EndTempString && TempString - ERR_TEMPMES < ERR_MAXLENGTH; ++TempString)
             {
                 CharacterTemp = *TempString;
                 *TempString = Character;
@@ -254,9 +254,9 @@ void ERR_ADDERRORFOREIGN(uint32_t ErrorID, const char *ErrorMes, const char *For
     snprintf(ERR_TEMPMES, ERR_MAXLENGTH, "%s%s%s", Format, ERR_MERGE, ErrorMes);
 
     // Add a % if there is a % in previous error message
-    for (char *String = ERR_TEMPMES + strlen(Format) + strlen(ERR_MERGE), *EndString = ERR_TEMPMES + strlen(ERR_TEMPMES); String < EndString && String - ERR_TEMPMES < ERR_MAXLENGTH; ++String)
+    for (char *String = ERR_TEMPMES + strlen(ERR_TEMPMES) - 1, *EndString = ERR_TEMPMES + strlen(Format) + strlen(ERR_MERGE) - 1; String > EndString; --String)
         if (*String == '%')
-            for (char Character = '%', CharacterTemp, *TempString = ++String; TempString < EndString && TempString - ERR_TEMPMES < ERR_MAXLENGTH; ++TempString)
+            for (char Character = '%', CharacterTemp, *TempString = ++String, EndTempString = String + strlen(String); TempString < EndTempString && TempString - ERR_TEMPMES < ERR_MAXLENGTH; ++TempString)
             {
                 CharacterTemp = *TempString;
                 *TempString = Character;
@@ -287,7 +287,6 @@ void __ERR_SETERROR(uint32_t ErrorID, const char *Format, va_list *VarArgs, bool
     char *String = ERR_CURRENTMES;
     size_t MaxLength = ERR_MAXLENGTH;
     size_t Length;
-    char *Input;
 
     // Write error ID
     Length = snprintf(String, MaxLength, "%X: ", ErrorID);
@@ -298,7 +297,7 @@ void __ERR_SETERROR(uint32_t ErrorID, const char *Format, va_list *VarArgs, bool
     vsnprintf(String, MaxLength, Format, *VarArgs);
 
     // Add terminating character in case of overflow
-    ERR_CURRENTMES[ERR_MAXLENGTH - 1] = '\0';
+    //ERR_CURRENTMES[ERR_MAXLENGTH - 1] = '\0';
 
     // Add error message to error message list
     extern char ERR_ERRORMESLIST[];
@@ -311,15 +310,18 @@ void __ERR_SETERROR(uint32_t ErrorID, const char *Format, va_list *VarArgs, bool
     if (Pos < 0)
         Pos = 0;
 
-    if (Pos < ERR_MAXARCHIVED)
+    Pos = (ERR_ERRORMESSTART + Pos) % ERR_MAXARCHIVED;
+
+    // Set message
+    snprintf(ERR_ERRORMESLIST + ERR_MAXLENGTH * Pos, ERR_MAXLENGTH, "%s", ERR_CURRENTMES);
+
+    // Increment the counter
+    ++ERR_ERRORMESCOUNT;
+
+    if (ERR_ERRORMESCOUNT > ERR_MAXARCHIVED)
     {
-        Pos = (ERR_ERRORMESSTART + Pos) % ERR_MAXARCHIVED;
-
-        // Set message
-        strncpy(ERR_ERRORMESLIST + ERR_MAXLENGTH * Pos, ERR_CURRENTMES, ERR_MAXLENGTH);
-
-        // Increment the counter
-        ++ERR_ERRORMESCOUNT;
+        ERR_ERRORMESCOUNT = ERR_MAXARCHIVED;
+        ++ERR_ERRORMESSTART;
     }
 
     // If the error type is too large then run exit function
@@ -340,36 +342,36 @@ char *ERR_GETARCHIVEDERROR(void)
         return NULL;
 
     // Copy the message
-    strncpy(ERR_CURRENTMES, ERR_ERRORMESLIST + ERR_ERRORMESSTART * ERR_MAXLENGTH, ERR_MAXLENGTH);
+    snprintf(ERR_RETURNMES, ERR_MAXLENGTH, "%s", ERR_ERRORMESLIST + ERR_ERRORMESSTART * ERR_MAXLENGTH);
 
     // Remove message
     ERR_ERRORMESSTART = (ERR_ERRORMESSTART + 1) % ERR_MAXARCHIVED;
     --ERR_ERRORMESCOUNT;
 
-    return ERR_CURRENTMES;
+    return ERR_RETURNMES;
 }
 
 // Undefine definitions
-#undef ERR_EXITFUNC
-#undef ERR_THRESHOLD
 #undef ERR_PREFIX
 #undef ERR_MAXLENGTH
 #undef ERR_MAXARCHIVED
+#undef ERR_EXITFUNC
+#undef ERR_THRESHOLD
 #undef ERR_MERGE
+#undef ERR_ERRORTYPE_MASK
+#undef ERR_ERRORTYPE_REDUCE
 #undef ERR_GETERROR
-#undef ERR_GETERRORTYPE
 #undef ERR_SETERROR
 #undef ERR_ADDERROR
 #undef ERR_ADDERRORFOREIGN
 #undef __ERR_SETERROR
-#undef ERR_GETARCHIVEDERROR
 #undef ERR_CURRENTMES
 #undef ERR_RETURNMES
 #undef ERR_TEMPMES
-#undef ERR_ERRORTYPE
-#undef ERR_ERRORTYPE_MASK
-#undef ERR_ERRORTYPE_REDUCE
 #undef ERR_ERRORMESLIST
 #undef ERR_ERRORMESCOUNT
 #undef ERR_ERRORMESSTART
+#undef ERR_GETARCHIVEDERROR
+#undef ERR_ERRORTYPE
+#undef ERR_GETERRORTYPE
 #undef ERR_EXIT
