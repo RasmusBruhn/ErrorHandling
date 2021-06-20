@@ -1,4 +1,9 @@
-#include <stdinc.h>
+#include <stdio.h>
+#include <stdint.h>
+#include <stdarg.h>
+#include <stdbool.h>
+#include <string.h>
+#include <stdlib.h>
 
 // Create names
 #ifndef _ERR_SETUPNAME
@@ -103,6 +108,10 @@ void ERR_SETUPNAMEPRE(ERR_PREFIX, ExitFunc)(uint32_t ErrorID) {exit((int32_t)Err
 // Returns the error message and NULL if there were none
 #define ERR_GETARCHIVEDERROR ERR_SETUPNAME(ERR_PREFIX, GetArchivedError)
 
+// Clears the archive
+// Returns nothing
+#define ERR_CLEARARCHIVE ERR_SETUPNAME(ERR_PREFIX, ClearArchive)
+
 // The worst error type that has occured
 #define ERR_ERRORTYPE ERR_SETUPNAMEPRE(ERR_PREFIX, ErrorType)
 
@@ -157,25 +166,29 @@ uint32_t ERR_GETERRORTYPE(void);
 // Returns the error message and NULL if there were none
 char *ERR_GETARCHIVEDERROR(void);
 
+// Clears the archive
+// Returns nothing
+void ERR_CLEARARCHIVE(void);
+
 // Runs when error is too bad, should exit thr program
 // Returns nothing
 // ErrorID: The error ID that lead to the exit function being run
 void (*ERR_EXIT)(uint32_t ErrorID) = ERR_EXITFUNC;
 
 // The current error message
-static char ERR_CURRENTMES[ERR_MAXLENGTH] = "No Error has occured";
+static char ERR_CURRENTMES[ERR_MAXLENGTH] = "No error has occured";
 
 // The string which the error message is copied to when given to the user
-static char ERR_RETURNMES[ERR_MAXLENGTH];
+static char ERR_RETURNMES[ERR_MAXLENGTH] = "";
 
 // A temperary string used in the add error functions
-static char ERR_TEMPMES[ERR_MAXLENGTH];
+static char ERR_TEMPMES[ERR_MAXLENGTH] = "";
 
 // The worst error type that has yet occured
 static uint32_t ERR_ERRORTYPE = 0;
 
 // List of old error messages
-static char ERR_ERRORMESLIST[ERR_MAXARCHIVED * ERR_MAXLENGTH];
+static char ERR_ERRORMESLIST[ERR_MAXARCHIVED * ERR_MAXLENGTH] = "";
 
 // Number of archived error messages
 static uint32_t ERR_ERRORMESCOUNT = 0;
@@ -221,20 +234,32 @@ void ERR_ADDERROR(uint32_t ErrorID, const char *Format, ...)
     va_start(VarArgs, Format);
 
     // Add the previous error message
-    snprintf(ERR_TEMPMES, ERR_MAXLENGTH, "%s%s%s", Format, ERR_MERGE, ERR_CURRENTMES);
+    int32_t OptimalLength = snprintf(ERR_TEMPMES, ERR_MAXLENGTH, "%s%s%s", Format, ERR_MERGE, ERR_GETERROR());
 
     // Add a % if there is a % in previous error message
     for (char *String = ERR_TEMPMES + strlen(ERR_TEMPMES) - 1, *EndString = ERR_TEMPMES + strlen(Format) + strlen(ERR_MERGE) - 1; String > EndString; --String)
         if (*String == '%')
-            for (char Character = '%', CharacterTemp, *TempString = ++String, EndTempString = String + strlen(String); TempString < EndTempString && TempString - ERR_TEMPMES < ERR_MAXLENGTH; ++TempString)
+        {
+            ++OptimalLength;
+
+            for (char Character = '%', CharacterTemp, *TempString = String + 1, *EndTempString = String + strlen(String) + 2; TempString < EndTempString && TempString - ERR_TEMPMES < ERR_MAXLENGTH - 1; ++TempString)
             {
                 CharacterTemp = *TempString;
                 *TempString = Character;
                 Character = CharacterTemp;
             }
+        }
 
     // Add terminating character in case of overflow
     ERR_TEMPMES[ERR_MAXLENGTH - 1] = '\0';
+
+    // Write ... if the message is too long
+    if (OptimalLength >= ERR_MAXLENGTH)
+    {
+        ERR_TEMPMES[ERR_MAXLENGTH - 2] = '.';
+        ERR_TEMPMES[ERR_MAXLENGTH - 3] = '.';
+        ERR_TEMPMES[ERR_MAXLENGTH - 4] = '.';
+    }
 
     // Set error message
     __ERR_SETERROR(ErrorID, ERR_TEMPMES, &VarArgs, true);
@@ -251,20 +276,32 @@ void ERR_ADDERRORFOREIGN(uint32_t ErrorID, const char *ErrorMes, const char *For
     va_start(VarArgs, Format);
 
     // Add the previous error message
-    snprintf(ERR_TEMPMES, ERR_MAXLENGTH, "%s%s%s", Format, ERR_MERGE, ErrorMes);
+    int32_t OptimalLength = snprintf(ERR_TEMPMES, ERR_MAXLENGTH, "%s%s%s", Format, ERR_MERGE, ErrorMes);
 
     // Add a % if there is a % in previous error message
     for (char *String = ERR_TEMPMES + strlen(ERR_TEMPMES) - 1, *EndString = ERR_TEMPMES + strlen(Format) + strlen(ERR_MERGE) - 1; String > EndString; --String)
         if (*String == '%')
-            for (char Character = '%', CharacterTemp, *TempString = ++String, EndTempString = String + strlen(String); TempString < EndTempString && TempString - ERR_TEMPMES < ERR_MAXLENGTH; ++TempString)
+        {
+            ++OptimalLength;
+
+            for (char Character = '%', CharacterTemp, *TempString = String + 1, *EndTempString = String + strlen(String) + 2; TempString < EndTempString && TempString - ERR_TEMPMES < ERR_MAXLENGTH - 1; ++TempString)
             {
                 CharacterTemp = *TempString;
                 *TempString = Character;
                 Character = CharacterTemp;
             }
+        }
 
     // Add terminating character in case of overflow
     ERR_TEMPMES[ERR_MAXLENGTH - 1] = '\0';
+
+    // Write ... if the message is too long
+    if (OptimalLength >= ERR_MAXLENGTH)
+    {
+        ERR_TEMPMES[ERR_MAXLENGTH - 2] = '.';
+        ERR_TEMPMES[ERR_MAXLENGTH - 3] = '.';
+        ERR_TEMPMES[ERR_MAXLENGTH - 4] = '.';
+    }
 
     // Set error message
     __ERR_SETERROR(ErrorID, ERR_TEMPMES, &VarArgs, false);
@@ -294,7 +331,15 @@ void __ERR_SETERROR(uint32_t ErrorID, const char *Format, va_list *VarArgs, bool
     MaxLength -= Length;
 
     // Write the rest
-    vsnprintf(String, MaxLength, Format, *VarArgs);
+    int32_t OptimalLength = vsnprintf(String, MaxLength, Format, *VarArgs);
+
+    // Write ... if the message is too long
+    if (OptimalLength >= ERR_MAXLENGTH)
+    {
+        ERR_CURRENTMES[ERR_MAXLENGTH - 2] = '.';
+        ERR_CURRENTMES[ERR_MAXLENGTH - 3] = '.';
+        ERR_CURRENTMES[ERR_MAXLENGTH - 4] = '.';
+    }
 
     // Add terminating character in case of overflow
     //ERR_CURRENTMES[ERR_MAXLENGTH - 1] = '\0';
@@ -310,19 +355,19 @@ void __ERR_SETERROR(uint32_t ErrorID, const char *Format, va_list *VarArgs, bool
     if (Pos < 0)
         Pos = 0;
 
-    Pos = (ERR_ERRORMESSTART + Pos) % ERR_MAXARCHIVED;
-
-    // Set message
-    snprintf(ERR_ERRORMESLIST + ERR_MAXLENGTH * Pos, ERR_MAXLENGTH, "%s", ERR_CURRENTMES);
-
     // Increment the counter
-    ++ERR_ERRORMESCOUNT;
+    ERR_ERRORMESCOUNT = Pos + 1;
+
+    Pos = (ERR_ERRORMESSTART + Pos) % ERR_MAXARCHIVED;
 
     if (ERR_ERRORMESCOUNT > ERR_MAXARCHIVED)
     {
         ERR_ERRORMESCOUNT = ERR_MAXARCHIVED;
-        ++ERR_ERRORMESSTART;
+        ERR_ERRORMESSTART = (ERR_ERRORMESSTART + 1) % ERR_MAXARCHIVED;
     }
+
+    // Set message
+    snprintf(ERR_ERRORMESLIST + ERR_MAXLENGTH * Pos, ERR_MAXLENGTH, "%s", ERR_CURRENTMES);
 
     // If the error type is too large then run exit function
     extern void (*ERR_EXIT)(uint32_t ErrorID);
@@ -351,6 +396,15 @@ char *ERR_GETARCHIVEDERROR(void)
     return ERR_RETURNMES;
 }
 
+void ERR_CLEARARCHIVE(void)
+{
+    extern uint32_t ERR_ERRORMESCOUNT;
+    extern uint32_t ERR_ERRORMESSTART;
+
+    ERR_ERRORMESSTART = 0;
+    ERR_ERRORMESCOUNT = 0;
+}
+
 // Undefine definitions
 #undef ERR_PREFIX
 #undef ERR_MAXLENGTH
@@ -372,6 +426,7 @@ char *ERR_GETARCHIVEDERROR(void)
 #undef ERR_ERRORMESCOUNT
 #undef ERR_ERRORMESSTART
 #undef ERR_GETARCHIVEDERROR
+#undef ERR_CLEARARCHIVE
 #undef ERR_ERRORTYPE
 #undef ERR_GETERRORTYPE
 #undef ERR_EXIT
