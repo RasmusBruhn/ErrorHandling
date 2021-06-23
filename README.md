@@ -80,7 +80,8 @@ void _[Prefix]_AddErrorForeign(uint32_t ErrorID, const char *ErrorMes, const cha
         ...:                        The variables used in Format, follows printf standard.
 
 char *[Prefix]_GetError(void):
-    Retrieves the error message.
+    Retrieves the error message, the message should be printed or copied immediately since any 
+    later call of GetError will overwrite it.
     Return: The error message.
 
 char *[Prefix]_GetArchivedError(void):
