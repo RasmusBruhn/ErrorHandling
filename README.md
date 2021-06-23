@@ -3,7 +3,6 @@ This header adds some error handling functions which makes it easier to do error
 creating/retrieving an error only uses one function and it can store an archive of messages.
 This header can be included multiple times given that the prefix is different.
 
-
 Setup:
 ----------------------------------------------------------------------------------------------------
 To include this header into your project you should first set the settings by defining macro
@@ -18,7 +17,7 @@ ERR_MAXARCHIVED:    The maximum number of archived messages, after this number i
                     oldest messages will be overwritten, defaults to [100].
 
 ERR_EXITFUNC:       A pointer to an exit function, this will be be executed whenever the error is
-                    too bad, have to have the form: [void exitFunc(uint32_t ErrorID)], defaults to
+                    too bad, have to have the form: [void exitFunc(uint64_t ErrorID)], defaults to
                     the standard [&exit] function.
 
 ERR_THRESHOLD:      The threshold for when the exit function should activate, it activates whenever 
@@ -43,38 +42,51 @@ Example:
 
 ID:
 ----------------------------------------------------------------------------------------------------
+Error ID standard: The ID is a 64-bit unsigned integer with standard structure 0xLLLLLLLLFFFFTTEE.
+L: The library ID, each library created should have its own unique ID, programmes which are not 
+   libraries and is not meant to be used in other projects should have library ID of 0.
+   Old libraries from before the V1.2(64Bit) update will also have ID of 0.
+F: The function ID, each function able to produce errors should have an ID not repeated by any
+   other function in the same library.
+T: The error type, the different standard types are defined below.
+E: The unique error ID, each error in a function should have its own unique ID.
+
 The different default error types.
 0: No Error, No error has occured and you should ignore it.
 1: Warning, An error has occured but the function was still able to finish.
 2: Error, An error occured which stopped the function from finishing, but the program can still run.
 3: Fatal Error, An error has occured which has most likely broken the application and it needs to 
    shut down.
+
+These error IDs are just standard but any system can be used, just remember to change 
+ERR_ERRORTYPE_MASK, ERR_ERRORTYPE_REDUCE and ERR_THRESHOLD when changing the standard for the
+error type. See the bottom of the document for a list of library IDs.
 ----------------------------------------------------------------------------------------------------
 
 
 Functions:
 ----------------------------------------------------------------------------------------------------
-void _[Prefix]_SetError(uint32_t ErrorID, const char *Format, ...):
+void _[Prefix]_SetError(uint64_t ErrorID, const char *Format, ...):
     Sets the error message so that it can be retrieved with "[Prefix]_GetError()".
     Return: Void
     Arguments:
-        uint32_t ErrorID:           The ID of the error that has occured.
+        uint64_t ErrorID:           The ID of the error that has occured.
 		const char *Format:         The format of the message, follows printf standard.
         ...:                        The variables used in Format, follows printf standard.
 
-void _[Prefix]_AddError(uint32_t ErrorID, const char *Format, ...):
+void _[Prefix]_AddError(uint64_t ErrorID, const char *Format, ...):
     Sets the error message with reference to the last error message from this library.
     Return: Void
     Arguments:
-        uint32_t ErrorID:           The ID of the error that has occured.
+        uint64_t ErrorID:           The ID of the error that has occured.
 		const char *Format:         The format of the message, follows printf standard.
         ...:                        The variables used in Format, follows printf standard.
 
-void _[Prefix]_AddErrorForeign(uint32_t ErrorID, const char *ErrorMes, const char *Format, ...):
+void _[Prefix]_AddErrorForeign(uint64_t ErrorID, const char *ErrorMes, const char *Format, ...):
     Sets the error message with reference to another message.
     Return: Void
     Arguments:
-        uint32_t ErrorID:           The ID of the error that has occured.
+        uint64_t ErrorID:           The ID of the error that has occured.
         ErrorMes:                   The message to reference
 		const char *Format:         The format of the message, follows printf standard.
         ...:                        The variables used in Format, follows printf standard.
@@ -92,11 +104,17 @@ void [Prefix]_ClearArchive(void):
     Clears the archive of old messages.
     Return: Void
 	
-uint32_t [Prefix]_GetErrorType(void):
+uint64_t [Prefix]_GetErrorType(void):
 	Retrieves the worst error type that has occured.
 	Return: The error type.
 
-uint32_t [Prefix]_GetErrorID(void):
+uint64_t [Prefix]_GetErrorID(void):
     Retrieves the ID of the last error that occured.
     Return: The error ID.
+----------------------------------------------------------------------------------------------------
+
+Library ID:
+----------------------------------------------------------------------------------------------------
+Main programme/old libraries:                           0
+Debug:                                                  1
 ----------------------------------------------------------------------------------------------------

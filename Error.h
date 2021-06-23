@@ -28,7 +28,7 @@
 #endif
 
 #ifndef ERR_EXITFUNC
-void ERR_SETUPNAMEPRE(ERR_PREFIX, ExitFunc)(uint32_t ErrorID) {exit((int32_t)ErrorID);} // Default exit function
+void ERR_SETUPNAMEPRE(ERR_PREFIX, ExitFunc)(uint64_t ErrorID) {exit((int32_t)ErrorID);} // Default exit function
 #define ERR_EXITFUNC &ERR_SETUPNAMEPRE(ERR_PREFIX, ExitFunc)
 #endif
 
@@ -140,14 +140,14 @@ char *ERR_GETERROR(void);
 // ErrorID: The ID of the error
 // Format: The format of the error message, follows printf standard
 // ...: The variables asked for in Format, also printf standard
-void ERR_SETERROR(uint32_t ErrorID, const char *Format, ...);
+void ERR_SETERROR(uint64_t ErrorID, const char *Format, ...);
 
 // Sets an error with reference to the last error that occured from this same library
 // Returns nothing
 // ErrorID: The ID of the error
 // Format: The format of the error message, follows printf standard
 // ...: The variables asked for in Format, also printf standard
-void ERR_ADDERROR(uint32_t ErrorID, const char *Format, ...);
+void ERR_ADDERROR(uint64_t ErrorID, const char *Format, ...);
 
 // Sets an error with reference to another error message
 // Returns nothing
@@ -155,7 +155,7 @@ void ERR_ADDERROR(uint32_t ErrorID, const char *Format, ...);
 // ErrorMes: The message to reference
 // Format: The format of the error message, follows printf standard
 // ...: The variables asked for in Format, also printf standard
-void ERR_ADDERRORFOREIGN(uint32_t ErrorID, const char *ErrorMes, const char *Format, ...);
+void ERR_ADDERRORFOREIGN(uint64_t ErrorID, const char *ErrorMes, const char *Format, ...);
 
 // Set the error message, this is the function that all the others use
 // Returns nothing
@@ -163,11 +163,11 @@ void ERR_ADDERRORFOREIGN(uint32_t ErrorID, const char *ErrorMes, const char *For
 // Format: The format of the error message, follows printf standard
 // VarArgs: The variables asked for in Format, also printf standard
 // OverwriteMessage: If it should overwrite the last message in the error message list
-void __ERR_SETERROR(uint32_t ErrorID, const char *Format, va_list *VarArgs, bool OverwriteMessage);
+void __ERR_SETERROR(uint64_t ErrorID, const char *Format, va_list *VarArgs, bool OverwriteMessage);
 
 // Gets the worst error type that has occured
 // Returns the error type
-uint32_t ERR_GETERRORTYPE(void);
+uint64_t ERR_GETERRORTYPE(void);
 
 // Gets the oldest error message and deletes that from memory
 // Returns the error message and NULL if there were none
@@ -180,7 +180,7 @@ void ERR_CLEARARCHIVE(void);
 // Runs when error is too bad, should exit thr program
 // Returns nothing
 // ErrorID: The error ID that lead to the exit function being run
-void (*ERR_EXIT)(uint32_t ErrorID) = ERR_EXITFUNC;
+void (*ERR_EXIT)(uint64_t ErrorID) = ERR_EXITFUNC;
 
 // The current error message
 static char ERR_CURRENTMES[ERR_MAXLENGTH] = "No error has occured";
@@ -192,10 +192,10 @@ static char ERR_RETURNMES[ERR_MAXLENGTH] = "";
 static char ERR_TEMPMES[ERR_MAXLENGTH] = "";
 
 // The worst error type that has yet occured
-static uint32_t ERR_ERRORTYPE = 0;
+static uint64_t ERR_ERRORTYPE = 0;
 
 // The last error ID
-static uint32_t ERR_ERRORID = 0;
+static uint64_t ERR_ERRORID = 0;
 
 // List of old error messages
 static char ERR_ERRORMESLIST[ERR_MAXARCHIVED * ERR_MAXLENGTH] = "";
@@ -206,16 +206,16 @@ static uint32_t ERR_ERRORMESCOUNT = 0;
 // Where the first archived error message is
 static uint32_t ERR_ERRORMESSTART = 0;
 
-uint32_t ERR_GETERRORTYPE(void)
+uint64_t ERR_GETERRORTYPE(void)
 {
-    extern uint32_t ERR_ERRORTYPE;
+    extern uint64_t ERR_ERRORTYPE;
     
     return ERR_ERRORTYPE;
 }
 
-uint32_t ERR_GETERRORID(void)
+uint64_t ERR_GETERRORID(void)
 {
-    extern uint32_t ERR_ERRORID;
+    extern uint64_t ERR_ERRORID;
 
     return ERR_ERRORID;
 }
@@ -230,7 +230,7 @@ char *ERR_GETERROR(void)
     return ERR_RETURNMES;
 }
 
-void ERR_SETERROR(uint32_t ErrorID, const char *Format, ...)
+void ERR_SETERROR(uint64_t ErrorID, const char *Format, ...)
 {
     // Setup to get the error messages
     va_list VarArgs;
@@ -242,7 +242,7 @@ void ERR_SETERROR(uint32_t ErrorID, const char *Format, ...)
     va_end(VarArgs);
 }
 
-void ERR_ADDERROR(uint32_t ErrorID, const char *Format, ...)
+void ERR_ADDERROR(uint64_t ErrorID, const char *Format, ...)
 {
     extern char ERR_TEMPMES[];
 
@@ -284,7 +284,7 @@ void ERR_ADDERROR(uint32_t ErrorID, const char *Format, ...)
     va_end(VarArgs);
 }
 
-void ERR_ADDERRORFOREIGN(uint32_t ErrorID, const char *ErrorMes, const char *Format, ...)
+void ERR_ADDERRORFOREIGN(uint64_t ErrorID, const char *ErrorMes, const char *Format, ...)
 {
     extern char ERR_TEMPMES[];
 
@@ -326,17 +326,17 @@ void ERR_ADDERRORFOREIGN(uint32_t ErrorID, const char *ErrorMes, const char *For
     va_end(VarArgs);
 }
 
-void __ERR_SETERROR(uint32_t ErrorID, const char *Format, va_list *VarArgs, bool OverwriteMessage)
+void __ERR_SETERROR(uint64_t ErrorID, const char *Format, va_list *VarArgs, bool OverwriteMessage)
 {
     extern char ERR_CURRENTMES[];
-    extern uint32_t ERR_ERRORTYPE;
-    extern uint32_t ERR_ERRORID;
+    extern uint64_t ERR_ERRORTYPE;
+    extern uint64_t ERR_ERRORID;
 
     // Set error ID
     ERR_ERRORID = ErrorID;
 
     // Set error type
-    uint32_t ErrorType = (ErrorID & ERR_ERRORTYPE_MASK) / ERR_ERRORTYPE_REDUCE;
+    uint64_t ErrorType = (ErrorID & ERR_ERRORTYPE_MASK) / ERR_ERRORTYPE_REDUCE;
 
     if (ERR_ERRORTYPE < ErrorType)
         ERR_ERRORTYPE = ErrorType;
@@ -347,7 +347,7 @@ void __ERR_SETERROR(uint32_t ErrorID, const char *Format, va_list *VarArgs, bool
     size_t Length;
 
     // Write error ID
-    Length = snprintf(String, MaxLength, "%X: ", ErrorID);
+    Length = snprintf(String, MaxLength, "%lX: ", ErrorID);
     String += Length;
     MaxLength -= Length;
 
@@ -391,7 +391,7 @@ void __ERR_SETERROR(uint32_t ErrorID, const char *Format, va_list *VarArgs, bool
     snprintf(ERR_ERRORMESLIST + ERR_MAXLENGTH * Pos, ERR_MAXLENGTH, "%s", ERR_CURRENTMES);
 
     // If the error type is too large then run exit function
-    extern void (*ERR_EXIT)(uint32_t ErrorID);
+    extern void (*ERR_EXIT)(uint64_t ErrorID);
 
     if (ErrorType >= ERR_THRESHOLD)
         ERR_EXIT(ErrorID);
