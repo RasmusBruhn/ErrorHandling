@@ -95,4 +95,8 @@ void [Prefix]_ClearArchive(void):
 uint32_t [Prefix]_GetErrorType(void):
 	Retrieves the worst error type that has occured.
 	Return: The error type.
+
+uint32_t [Prefix]_GetErrorID(void):
+    Retrieves the ID of the last error that occured.
+    Return: The error ID.
 ----------------------------------------------------------------------------------------------------
