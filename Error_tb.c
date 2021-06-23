@@ -11,8 +11,8 @@ void TestExit(uint32_t ErrorID);
 
 int main(int argc, char **argv)
 {
-    // Test error type
-    printf("Error type initialisation: %u\n\n", ERR_GetErrorType());
+    // Test error type and ID
+    printf("Error type initialisation: %u\nError ID initialisation: %X\n\n", ERR_GetErrorType(), ERR_GetErrorID());
 
     // Test error message initialisation
     printf("Error message initialisation: %s\n\n", ERR_GetError());
@@ -21,22 +21,22 @@ int main(int argc, char **argv)
     _ERR_SetError(0x00000101, "First error %d", 1);
     printf("Error message: %s\n\n", ERR_GetError());
 
-    // Test updated error type
-    printf("Error type update: %u\n\n", ERR_GetErrorType());
+    // Test updated error type and ID
+    printf("Error type updated: %u\nError ID updated: %X\n\n", ERR_GetErrorType(), ERR_GetErrorID());
 
     // Test added message
     _ERR_AddError(0x00000202, "Second error %d", 2);
     printf("Error message added: %s\n\n", ERR_GetError());
 
-    // Test updated error type
-    printf("Error type update: %u\n\n", ERR_GetErrorType());
+    // Test updated error type and ID
+    printf("Error type updated: %u\nError ID updated: %X\n\n", ERR_GetErrorType(), ERR_GetErrorID());
 
     // Test foreign message
     _ERR_AddErrorForeign(0x00000303, "Foreign", "Third error %d", 3);
     printf("Error message foreign added: %s\n\n", ERR_GetError());
 
-    // Test updated error type
-    printf("Error type update: %u\n\n", ERR_GetErrorType());
+    // Test updated error type ID
+    printf("Error type updated: %u\nError ID updated: %X\n\n", ERR_GetErrorType(), ERR_GetErrorID());
 
     // Test too long
     _ERR_SetError(0x05430121, "1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ");
@@ -46,8 +46,8 @@ int main(int argc, char **argv)
     _ERR_AddErrorForeign(0x00000104, "Test %", "Test");
     printf("Error message with %%: %s\n\n", ERR_GetError());
 
-    // Test updated error type
-    printf("Error type update: %u\n\n", ERR_GetErrorType());
+    // Test updated error type and ID
+    printf("Error type updated: %u\nError ID updated: %X\n\n", ERR_GetErrorType(), ERR_GetErrorID());
 
     // Test the log
     ERR_ClearArchive();

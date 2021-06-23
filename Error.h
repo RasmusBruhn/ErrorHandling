@@ -115,9 +115,16 @@ void ERR_SETUPNAMEPRE(ERR_PREFIX, ExitFunc)(uint32_t ErrorID) {exit((int32_t)Err
 // The worst error type that has occured
 #define ERR_ERRORTYPE ERR_SETUPNAMEPRE(ERR_PREFIX, ErrorType)
 
+// The ID of the last error that occured
+#define ERR_ERRORID ERR_SETUPNAMEPRE(ERR_PREFIX, ErrorID)
+
 // Gets the worst error type that has occured
 // Returns the error type
 #define ERR_GETERRORTYPE ERR_SETUPNAME(ERR_PREFIX, GetErrorType)
+
+// Gets the ID of the last error that occured
+// Returns the ID
+#define ERR_GETERRORID ERR_SETUPNAME(ERR_PREFIX, GetErrorID)
 
 // Runs when error is too bad, should exit thr program
 // Returns nothing
@@ -187,6 +194,9 @@ static char ERR_TEMPMES[ERR_MAXLENGTH] = "";
 // The worst error type that has yet occured
 static uint32_t ERR_ERRORTYPE = 0;
 
+// The last error ID
+static uint32_t ERR_ERRORID = 0;
+
 // List of old error messages
 static char ERR_ERRORMESLIST[ERR_MAXARCHIVED * ERR_MAXLENGTH] = "";
 
@@ -201,6 +211,13 @@ uint32_t ERR_GETERRORTYPE(void)
     extern uint32_t ERR_ERRORTYPE;
     
     return ERR_ERRORTYPE;
+}
+
+uint32_t ERR_GETERRORID(void)
+{
+    extern uint32_t ERR_ERRORID;
+
+    return ERR_ERRORID;
 }
 
 char *ERR_GETERROR(void)
@@ -313,6 +330,10 @@ void __ERR_SETERROR(uint32_t ErrorID, const char *Format, va_list *VarArgs, bool
 {
     extern char ERR_CURRENTMES[];
     extern uint32_t ERR_ERRORTYPE;
+    extern uint32_t ERR_ERRORID;
+
+    // Set error ID
+    ERR_ERRORID = ErrorID;
 
     // Set error type
     uint32_t ErrorType = (ErrorID & ERR_ERRORTYPE_MASK) / ERR_ERRORTYPE_REDUCE;
@@ -428,5 +449,7 @@ void ERR_CLEARARCHIVE(void)
 #undef ERR_GETARCHIVEDERROR
 #undef ERR_CLEARARCHIVE
 #undef ERR_ERRORTYPE
+#undef ERR_ERRORID
 #undef ERR_GETERRORTYPE
+#undef ERR_GETERRORID
 #undef ERR_EXIT
