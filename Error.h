@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <stdlib.h>
+#include <time.h>
 
 // Create names
 #ifndef _ERR_SETUPNAME
@@ -63,6 +64,15 @@ void ERR_SETUPNAMEPRE(ERR_PREFIX, ExitFunc)(uint64_t ErrorID) {exit((int32_t)Err
 // Format: The format of the error message, follows printf standard
 // ...: The variables asked for in Format, also printf standard
 #define ERR_SETERROR ERR_SETUPNAMEINT(ERR_PREFIX, SetError)
+
+// Sets the error with reference to some other error
+// Returns nothing
+// ErrorID: The ID of the error
+// ErrorMes: The message to reference
+// Format: The format of the error message, follows printf standard
+// VarArgs: The variables asked for in Format, also printf standard
+// OverwriteMessage: If it should overwrite the last message in the error message list
+#define __ERR_ADDERROR ERR_SETUPNAMEPRE(ERR_PREFIX, AddError)
 
 // Sets an error with reference to the last error that occured from this same library
 // Returns nothing
@@ -131,6 +141,14 @@ void ERR_SETUPNAMEPRE(ERR_PREFIX, ExitFunc)(uint64_t ErrorID) {exit((int32_t)Err
 // ErrorID: The error ID that lead to the exit function being run
 #define ERR_EXIT ERR_SETUPNAME(ERR_PREFIX, Exit)
 
+// The error logging file
+#define ERR_LOGFILE ERR_SETUPNAMEPRE(ERR_PREFIX, LogFile)
+
+// Function to set the log file
+// Returns nothing
+// LogFile: The file to write error logs to
+#define ERR_SETLOGFILE ERR_SETUPNAMEINT(ERR_PREFIX, SetLogFile)
+
 // Gets the error message
 // Returns a copy of the error string
 char *ERR_GETERROR(void);
@@ -141,6 +159,15 @@ char *ERR_GETERROR(void);
 // Format: The format of the error message, follows printf standard
 // ...: The variables asked for in Format, also printf standard
 void ERR_SETERROR(uint64_t ErrorID, const char *Format, ...);
+
+// Sets the error with reference to some other error
+// Returns nothing
+// ErrorID: The ID of the error
+// ErrorMes: The message to reference
+// Format: The format of the error message, follows printf standard
+// VarArgs: The variables asked for in Format, also printf standard
+// OverwriteMessage: If it should overwrite the last message in the error message list
+void __ERR_ADDERROR(uint64_t ErrorID, const char *ErrorMes, const char *Format, va_list *VarArgs, bool OverwriteMessage);
 
 // Sets an error with reference to the last error that occured from this same library
 // Returns nothing
@@ -182,6 +209,11 @@ void ERR_CLEARARCHIVE(void);
 // ErrorID: The error ID that lead to the exit function being run
 void (*ERR_EXIT)(uint64_t ErrorID) = ERR_EXITFUNC;
 
+// Function to set the log file
+// Returns nothing
+// LogFile: The file to write error logs to
+void ERR_SETLOGFILE(FILE *LogFile);
+
 // The current error message
 static char ERR_CURRENTMES[ERR_MAXLENGTH] = "No error has occured";
 
@@ -205,6 +237,16 @@ static uint32_t ERR_ERRORMESCOUNT = 0;
 
 // Where the first archived error message is
 static uint32_t ERR_ERRORMESSTART = 0;
+
+// The log file
+static FILE *ERR_LOGFILE = NULL;
+
+void ERR_SETLOGFILE(FILE *LogFile)
+{
+    extern FILE *ERR_LOGFILE;
+
+    ERR_LOGFILE = LogFile;
+}
 
 uint64_t ERR_GETERRORTYPE(void)
 {
@@ -242,55 +284,35 @@ void ERR_SETERROR(uint64_t ErrorID, const char *Format, ...)
     va_end(VarArgs);
 }
 
-void ERR_ADDERROR(uint64_t ErrorID, const char *Format, ...)
+void __ERR_ADDERROR(uint64_t ErrorID, const char *ErrorMes, const char *Format, va_list *VarArgs, bool OverwriteMessage)
 {
     extern char ERR_TEMPMES[];
+    extern FILE *ERR_LOGFILE;
 
-    // Setup to get the error messages
-    va_list VarArgs;
-    va_start(VarArgs, Format);
-
-    // Add the previous error message
-    int32_t OptimalLength = snprintf(ERR_TEMPMES, ERR_MAXLENGTH, "%s%s%s", Format, ERR_MERGE, ERR_GETERROR());
-
-    // Add a % if there is a % in previous error message
-    for (char *String = ERR_TEMPMES + strlen(ERR_TEMPMES) - 1, *EndString = ERR_TEMPMES + strlen(Format) + strlen(ERR_MERGE) - 1; String > EndString; --String)
-        if (*String == '%')
-        {
-            ++OptimalLength;
-
-            for (char Character = '%', CharacterTemp, *TempString = String + 1, *EndTempString = String + strlen(String) + 2; TempString < EndTempString && TempString - ERR_TEMPMES < ERR_MAXLENGTH - 1; ++TempString)
-            {
-                CharacterTemp = *TempString;
-                *TempString = Character;
-                Character = CharacterTemp;
-            }
-        }
-
-    // Add terminating character in case of overflow
-    ERR_TEMPMES[ERR_MAXLENGTH - 1] = '\0';
-
-    // Write ... if the message is too long
-    if (OptimalLength >= ERR_MAXLENGTH)
+    // Change write position in error file if it should overwrite the last message
+    if (ERR_LOGFILE != NULL)
     {
-        ERR_TEMPMES[ERR_MAXLENGTH - 2] = '.';
-        ERR_TEMPMES[ERR_MAXLENGTH - 3] = '.';
-        ERR_TEMPMES[ERR_MAXLENGTH - 4] = '.';
+        int32_t MesLength = strlen(ErrorMes);
+
+        // Go to start of last message
+        if (fseek(ERR_LOGFILE, -(MesLength + 1), SEEK_END) != 0)
+            fseek(ERR_LOGFILE, 0, SEEK_END);
+
+        else
+        {
+            // Read the message
+            fread(ERR_TEMPMES, sizeof(char), MesLength, ERR_LOGFILE);
+            ERR_TEMPMES[MesLength] = '\0';
+            
+            // Compare the message
+            if (strcmp(ErrorMes, ERR_TEMPMES) != 0)
+                fseek(ERR_LOGFILE, 0, SEEK_END);
+
+            // Set file to overwrite the last message, 24 for date, 1 for newline and 2 for colon-space
+            else
+                fseek(ERR_LOGFILE, -(MesLength + 27), SEEK_END);
+        }
     }
-
-    // Set error message
-    __ERR_SETERROR(ErrorID, ERR_TEMPMES, &VarArgs, true);
-
-    va_end(VarArgs);
-}
-
-void ERR_ADDERRORFOREIGN(uint64_t ErrorID, const char *ErrorMes, const char *Format, ...)
-{
-    extern char ERR_TEMPMES[];
-
-    // Setup to get the error messages
-    va_list VarArgs;
-    va_start(VarArgs, Format);
 
     // Add the previous error message
     int32_t OptimalLength = snprintf(ERR_TEMPMES, ERR_MAXLENGTH, "%s%s%s", Format, ERR_MERGE, ErrorMes);
@@ -321,7 +343,31 @@ void ERR_ADDERRORFOREIGN(uint64_t ErrorID, const char *ErrorMes, const char *For
     }
 
     // Set error message
-    __ERR_SETERROR(ErrorID, ERR_TEMPMES, &VarArgs, false);
+    __ERR_SETERROR(ErrorID, ERR_TEMPMES, VarArgs, OverwriteMessage);
+}
+
+void ERR_ADDERROR(uint64_t ErrorID, const char *Format, ...)
+{
+    extern char ERR_TEMPMES[];
+
+    // Setup to get the error messages
+    va_list VarArgs;
+    va_start(VarArgs, Format);
+
+    __ERR_ADDERROR(ErrorID, ERR_GETERROR(), Format, &VarArgs, true);
+
+    va_end(VarArgs);
+}
+
+void ERR_ADDERRORFOREIGN(uint64_t ErrorID, const char *ErrorMes, const char *Format, ...)
+{
+    extern char ERR_TEMPMES[];
+
+    // Setup to get the error messages
+    va_list VarArgs;
+    va_start(VarArgs, Format);
+
+    __ERR_ADDERROR(ErrorID, ErrorMes, Format, &VarArgs, false);
 
     va_end(VarArgs);
 }
@@ -365,6 +411,18 @@ void __ERR_SETERROR(uint64_t ErrorID, const char *Format, va_list *VarArgs, bool
     // Add terminating character in case of overflow
     //ERR_CURRENTMES[ERR_MAXLENGTH - 1] = '\0';
 
+    // Write to the error log
+    extern FILE *ERR_LOGFILE;
+
+    if (ERR_LOGFILE != NULL)
+    {
+        time_t CurTime;
+
+        time(&CurTime);
+
+        fprintf(ERR_LOGFILE, "%.24s: %s\n", ctime(&CurTime), ERR_CURRENTMES);
+    }
+
     // Add error message to error message list
     extern char ERR_ERRORMESLIST[];
     extern uint32_t ERR_ERRORMESCOUNT;
@@ -399,7 +457,6 @@ void __ERR_SETERROR(uint64_t ErrorID, const char *Format, va_list *VarArgs, bool
 
 char *ERR_GETARCHIVEDERROR(void)
 {
-    extern char ERR_CURRENTMES[];
     extern char ERR_ERRORMESLIST[];
     extern uint32_t ERR_ERRORMESCOUNT;
     extern uint32_t ERR_ERRORMESSTART;
@@ -437,6 +494,7 @@ void ERR_CLEARARCHIVE(void)
 #undef ERR_ERRORTYPE_REDUCE
 #undef ERR_GETERROR
 #undef ERR_SETERROR
+#undef __ERR_ADDERROR
 #undef ERR_ADDERROR
 #undef ERR_ADDERRORFOREIGN
 #undef __ERR_SETERROR
@@ -453,3 +511,5 @@ void ERR_CLEARARCHIVE(void)
 #undef ERR_GETERRORTYPE
 #undef ERR_GETERRORID
 #undef ERR_EXIT
+#undef ERR_LOGFILE
+#undef ERR_SETLOGFILE

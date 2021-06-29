@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <errno.h>
 
 void TestExit(uint64_t ErrorID);
 
@@ -69,6 +70,26 @@ int main(int argc, char **argv)
     printf("Error log overflow:\n");
     while ((Mes = ERR_GetArchivedError()) != NULL) printf("Message: %s\n", Mes);
     printf("\n");
+
+    // Test the log file
+    FILE *LogFile = fopen("c/ErrorHandling/ErrorLog.txt", "w+");
+
+    if (LogFile == NULL)
+        printf("Unable to open file: %s\n", strerror(errno));
+
+    _ERR_SetLogFile(LogFile);
+
+    // Test normal error
+    _ERR_SetError(0x0101, "First error");
+
+    // Test foreign
+    _ERR_AddErrorForeign(0x0102, "Foreign error", "Second error");
+
+    // Test adding error
+    _ERR_SetError(0x0103, "Third error");
+    _ERR_AddError(0x0104, "Fourth error");
+
+    fclose(LogFile);
 
     return 0;
 }

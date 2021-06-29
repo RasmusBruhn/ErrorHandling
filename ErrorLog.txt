@@ -1,0 +1,3 @@
+Tue Jun 29 22:14:04 2021: 101: First error
+Tue Jun 29 22:14:04 2021: 102: Second error -> Foreign error
+Tue Jun 29 22:14:04 2021: 104: Fourth error -> 103: Third error
