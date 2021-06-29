@@ -70,26 +70,33 @@ void _[Prefix]_SetError(uint64_t ErrorID, const char *Format, ...):
     Sets the error message so that it can be retrieved with "[Prefix]_GetError()".
     Return: Void
     Arguments:
-        uint64_t ErrorID:           The ID of the error that has occured.
-		const char *Format:         The format of the message, follows printf standard.
-        ...:                        The variables used in Format, follows printf standard.
+        ErrorID:        The ID of the error that has occured.
+		Format:         The format of the message, follows printf standard.
+        ...:            The variables used in Format, follows printf standard.
 
 void _[Prefix]_AddError(uint64_t ErrorID, const char *Format, ...):
     Sets the error message with reference to the last error message from this library.
     Return: Void
     Arguments:
-        uint64_t ErrorID:           The ID of the error that has occured.
-		const char *Format:         The format of the message, follows printf standard.
-        ...:                        The variables used in Format, follows printf standard.
+        ErrorID:        The ID of the error that has occured.
+		Format:         The format of the message, follows printf standard.
+        ...:            The variables used in Format, follows printf standard.
 
 void _[Prefix]_AddErrorForeign(uint64_t ErrorID, const char *ErrorMes, const char *Format, ...):
     Sets the error message with reference to another message.
     Return: Void
     Arguments:
-        uint64_t ErrorID:           The ID of the error that has occured.
-        ErrorMes:                   The message to reference
-		const char *Format:         The format of the message, follows printf standard.
-        ...:                        The variables used in Format, follows printf standard.
+        ErrorID:        The ID of the error that has occured.
+        ErrorMes:       The message to reference
+		Format:         The format of the message, follows printf standard.
+        ...:            The variables used in Format, follows printf standard.
+
+void _[Prefix]_SetLogFile(FILE *LogFile):
+    Sets the error log file to write the errors in, it will overwrite errors repeated by AddError.
+    It will also write the time of the error.
+    Return: Void
+    Arguments:
+        LogFile:        The file to write the error log to, should be opened using "w+" mode.
 
 char *[Prefix]_GetError(void):
     Retrieves the error message, the message should be printed or copied immediately since any 
