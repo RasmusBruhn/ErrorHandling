@@ -393,7 +393,7 @@ void __ERR_SETERROR(uint64_t ErrorID, const char *Format, va_list *VarArgs, bool
     size_t Length;
 
     // Write error ID
-    Length = snprintf(String, MaxLength, "%lX: ", ErrorID);
+    Length = snprintf(String, MaxLength, "%I64X: ", ErrorID);
     String += Length;
     MaxLength -= Length;
 
