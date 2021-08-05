@@ -19,7 +19,7 @@ int main(int argc, char **argv)
     printf("Error message initialisation: %s\n\n", ERR_GetError());
 
     // Test an error message
-    _ERR_SetError(0x00000101, "First error %d", 1);
+    _ERR_SetError(0x11100000101, "First error %d", 1);
     printf("Error message: %s\n\n", ERR_GetError());
 
     // Test updated error type and ID
@@ -90,6 +90,8 @@ int main(int argc, char **argv)
     _ERR_AddError(0x0104, "Fourth error");
 
     fclose(LogFile);
+
+    printf("Done\n");
 
     return 0;
 }
