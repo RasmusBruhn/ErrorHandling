@@ -419,7 +419,7 @@ void __ERR_ADDERROR(uint64_t ErrorID, char *FileName, uint32_t LineNumber, const
     }
 
     // Set error message
-    __ERR_SETERROR(ErrorID, LineNumber, FileName, ERR_TEMPMES, VarArgs, OverwriteMessage);
+    __ERR_SETERROR(ErrorID, FileName, LineNumber, ERR_TEMPMES, VarArgs, OverwriteMessage);
 }
 
 void ERR_ADDERROR(uint64_t ErrorID, const char *Format, ...)
@@ -495,14 +495,14 @@ void __ERR_SETERROR(uint64_t ErrorID, char *FileName, uint32_t LineNumber, const
     size_t Length;
 
     // Write error ID
-    Length = snprintf(String, MaxLength, "%I64X", ErrorID);
+    Length = snprintf(String, MaxLength, "0x%I64X", ErrorID);
     String += Length;
     MaxLength -= Length;
 
     // Write file and line
     if (FileName != NULL)
     {
-        Length = snprintf(String, MaxLength, " (in \"%s\", line %I32u)", FileName, LineNumber);
+        Length = snprintf(String, MaxLength, " (in \"%s\", line: %I32u)", FileName, LineNumber);
         String += Length;
         MaxLength -= Length;
     }

@@ -50,6 +50,19 @@ int main(int argc, char **argv)
     // Test updated error type and ID
     printf("Error type updated: %lu\nError ID updated: %lX\n\n", ERR_GetErrorType(), ERR_GetErrorID());
 
+    // Test line number
+    printf("Testing line number:\n");
+    
+    _ERR_SetErrorLoc(0x0105, "FileName", 100, "Error with location");
+    printf("Testing SetError: %s\n", ERR_GetError());
+
+    _ERR_SetErrorLoc(0x0106, "FileName2", 200, "Add error with location 1");
+    _ERR_AddErrorLoc(0x0107, "FileName2", 300, "Add error with location 2");
+    printf("Testing AddError: %s\n", ERR_GetError());
+
+    _ERR_AddErrorForeignLoc(0x0108, "FileName3", 400, "Foreign message", "Add error foreign with location");
+    printf("Testing AddErrorForeign: %s\n\n", ERR_GetError());
+
     // Test the log
     ERR_ClearArchive();
     _ERR_SetError(1, "1");
@@ -87,7 +100,7 @@ int main(int argc, char **argv)
 
     // Test adding error
     _ERR_SetError(0x0103, "Third error");
-    _ERR_AddError(0x0104, "Fourth error");
+    _ERR_AddError(0x0104, "Fourth error");    
 
     fclose(LogFile);
 
