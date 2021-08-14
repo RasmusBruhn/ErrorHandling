@@ -38,7 +38,7 @@ void ERR_SETUPNAMEPRE(ERR_PREFIX, ExitFunc)(uint64_t ErrorID) {exit((int32_t)Err
 #endif
 
 #ifndef ERR_MERGE
-#define ERR_MERGE " -> " // How to merge error messages
+#define ERR_MERGE " <- " // How to merge error messages
 #endif
 
 #ifndef ERR_ERRORTYPE_MASK
@@ -65,9 +65,20 @@ void ERR_SETUPNAMEPRE(ERR_PREFIX, ExitFunc)(uint64_t ErrorID) {exit((int32_t)Err
 // ...: The variables asked for in Format, also printf standard
 #define ERR_SETERROR ERR_SETUPNAMEINT(ERR_PREFIX, SetError)
 
+// Sets the error message with location
+// Returns nothing
+// ErrorID: The ID of the error
+// FileName: The name of the file in which the error occured, not used if it is NULL
+// LineNumber: The line number of the error, not used if FileName is NULL
+// Format: The format of the error message, follows printf standard
+// ...: The variables asked for in Format, also printf standard
+#define ERR_SETERRORLOC ERR_SETUPNAMEINT(ERR_PREFIX, SetErrorLoc)
+
 // Sets the error with reference to some other error
 // Returns nothing
 // ErrorID: The ID of the error
+// FileName: The name of the file in which the error occured, not used if it is NULL
+// LineNumber: The line number of the error, not used if FileName is NULL
 // ErrorMes: The message to reference
 // Format: The format of the error message, follows printf standard
 // VarArgs: The variables asked for in Format, also printf standard
@@ -81,6 +92,15 @@ void ERR_SETUPNAMEPRE(ERR_PREFIX, ExitFunc)(uint64_t ErrorID) {exit((int32_t)Err
 // ...: The variables asked for in Format, also printf standard
 #define ERR_ADDERROR ERR_SETUPNAMEINT(ERR_PREFIX, AddError)
 
+// Sets an error with reference to the last error that occured from this same library with location
+// Returns nothing
+// ErrorID: The ID of the error
+// FileName: The name of the file in which the error occured, not used if it is NULL
+// LineNumber: The line number of the error, not used if FileName is NULL
+// Format: The format of the error message, follows printf standard
+// ...: The variables asked for in Format, also printf standard
+#define ERR_ADDERRORLOC ERR_SETUPNAMEINT(ERR_PREFIX, AddErrorLoc)
+
 // Sets an error with reference to another error message
 // Returns nothing
 // ErrorID: The ID of the error
@@ -89,9 +109,21 @@ void ERR_SETUPNAMEPRE(ERR_PREFIX, ExitFunc)(uint64_t ErrorID) {exit((int32_t)Err
 // ...: The variables asked for in Format, also printf standard
 #define ERR_ADDERRORFOREIGN ERR_SETUPNAMEINT(ERR_PREFIX, AddErrorForeign)
 
+// Sets an error with reference to another error message with location
+// Returns nothing
+// ErrorID: The ID of the error
+// FileName: The name of the file in which the error occured, not used if it is NULL
+// LineNumber: The line number of the error, not used if FileName is NULL
+// ErrorMes: The message to reference
+// Format: The format of the error message, follows printf standard
+// ...: The variables asked for in Format, also printf standard
+#define ERR_ADDERRORFOREIGNLOC ERR_SETUPNAMEINT(ERR_PREFIX, AddErrorForeignLoc)
+
 // Set the error message, this is the function that all the others use
 // Returns nothing
 // ErrorID: The ID of the error
+// FileName: The name of the file in which the error occured, not used if it is NULL
+// LineNumber: The line number of the error, not used if FileName is NULL
 // Format: The format of the error message, follows printf standard
 // VarArgs: The variables asked for in Format, also printf standard
 #define __ERR_SETERROR ERR_SETUPNAMEPRE(ERR_PREFIX, SetError)
@@ -160,14 +192,25 @@ char *ERR_GETERROR(void);
 // ...: The variables asked for in Format, also printf standard
 void ERR_SETERROR(uint64_t ErrorID, const char *Format, ...);
 
+// Sets the error message with location
+// Returns nothing
+// ErrorID: The ID of the error
+// FileName: The name of the file in which the error occured, not used if it is NULL
+// LineNumber: The line number of the error, not used if FileName is NULL
+// Format: The format of the error message, follows printf standard
+// ...: The variables asked for in Format, also printf standard
+void ERR_SETERRORLOC(uint64_t ErrorID, char *FileName, uint32_t LineNumber, const char *Format, ...);
+
 // Sets the error with reference to some other error
 // Returns nothing
 // ErrorID: The ID of the error
+// FileName: The name of the file in which the error occured, not used if it is NULL
+// LineNumber: The line number of the error, not used if FileName is NULL
 // ErrorMes: The message to reference
 // Format: The format of the error message, follows printf standard
 // VarArgs: The variables asked for in Format, also printf standard
 // OverwriteMessage: If it should overwrite the last message in the error message list
-void __ERR_ADDERROR(uint64_t ErrorID, const char *ErrorMes, const char *Format, va_list *VarArgs, bool OverwriteMessage);
+void __ERR_ADDERROR(uint64_t ErrorID, char *FileName, uint32_t LineNumber, const char *ErrorMes, const char *Format, va_list *VarArgs, bool OverwriteMessage);
 
 // Sets an error with reference to the last error that occured from this same library
 // Returns nothing
@@ -175,6 +218,15 @@ void __ERR_ADDERROR(uint64_t ErrorID, const char *ErrorMes, const char *Format, 
 // Format: The format of the error message, follows printf standard
 // ...: The variables asked for in Format, also printf standard
 void ERR_ADDERROR(uint64_t ErrorID, const char *Format, ...);
+
+// Sets an error with reference to the last error that occured from this same library with location
+// Returns nothing
+// ErrorID: The ID of the error
+// FileName: The name of the file in which the error occured, not used if it is NULL
+// LineNumber: The line number of the error, not used if FileName is NULL
+// Format: The format of the error message, follows printf standard
+// ...: The variables asked for in Format, also printf standard
+void ERR_ADDERRORLOC(uint64_t ErrorID, char *FileName, uint32_t LineNumber, const char *Format, ...);
 
 // Sets an error with reference to another error message
 // Returns nothing
@@ -184,13 +236,25 @@ void ERR_ADDERROR(uint64_t ErrorID, const char *Format, ...);
 // ...: The variables asked for in Format, also printf standard
 void ERR_ADDERRORFOREIGN(uint64_t ErrorID, const char *ErrorMes, const char *Format, ...);
 
+// Sets an error with reference to another error message with location 
+// Returns nothing
+// ErrorID: The ID of the error
+// FileName: The name of the file in which the error occured, not used if it is NULL
+// LineNumber: The line number of the error, not used if FileName is NULL
+// ErrorMes: The message to reference
+// Format: The format of the error message, follows printf standard
+// ...: The variables asked for in Format, also printf standard
+void ERR_ADDERRORFOREIGNLOC(uint64_t ErrorID, char *FileName, uint32_t LineNumber, const char *ErrorMes, const char *Format, ...);
+
 // Set the error message, this is the function that all the others use
 // Returns nothing
 // ErrorID: The ID of the error
+// FileName: The name of the file in which the error occured, not used if it is NULL
+// LineNumber: The line number of the error, not used if FileName is NULL
 // Format: The format of the error message, follows printf standard
 // VarArgs: The variables asked for in Format, also printf standard
 // OverwriteMessage: If it should overwrite the last message in the error message list
-void __ERR_SETERROR(uint64_t ErrorID, const char *Format, va_list *VarArgs, bool OverwriteMessage);
+void __ERR_SETERROR(uint64_t ErrorID, char *FileName, uint32_t LineNumber, const char *Format, va_list *VarArgs, bool OverwriteMessage);
 
 // Gets the worst error type that has occured
 // Returns the error type
@@ -279,12 +343,24 @@ void ERR_SETERROR(uint64_t ErrorID, const char *Format, ...)
     va_start(VarArgs, Format);
 
     // Set error message
-    __ERR_SETERROR(ErrorID, Format, &VarArgs, false);
+    __ERR_SETERROR(ErrorID, NULL, 0, Format, &VarArgs, false);
 
     va_end(VarArgs);
 }
 
-void __ERR_ADDERROR(uint64_t ErrorID, const char *ErrorMes, const char *Format, va_list *VarArgs, bool OverwriteMessage)
+void ERR_SETERRORLOC(uint64_t ErrorID, char *FileName, uint32_t LineNumber, const char *Format, ...)
+{
+    // Setup to get the error messages
+    va_list VarArgs;
+    va_start(VarArgs, Format);
+
+    // Set error message
+    __ERR_SETERROR(ErrorID, FileName, LineNumber, Format, &VarArgs, false);
+
+    va_end(VarArgs);
+}
+
+void __ERR_ADDERROR(uint64_t ErrorID, char *FileName, uint32_t LineNumber, const char *ErrorMes, const char *Format, va_list *VarArgs, bool OverwriteMessage)
 {
     extern char ERR_TEMPMES[];
     extern FILE *ERR_LOGFILE;
@@ -343,7 +419,7 @@ void __ERR_ADDERROR(uint64_t ErrorID, const char *ErrorMes, const char *Format, 
     }
 
     // Set error message
-    __ERR_SETERROR(ErrorID, ERR_TEMPMES, VarArgs, OverwriteMessage);
+    __ERR_SETERROR(ErrorID, LineNumber, FileName, ERR_TEMPMES, VarArgs, OverwriteMessage);
 }
 
 void ERR_ADDERROR(uint64_t ErrorID, const char *Format, ...)
@@ -354,7 +430,20 @@ void ERR_ADDERROR(uint64_t ErrorID, const char *Format, ...)
     va_list VarArgs;
     va_start(VarArgs, Format);
 
-    __ERR_ADDERROR(ErrorID, ERR_GETERROR(), Format, &VarArgs, true);
+    __ERR_ADDERROR(ErrorID, NULL, 0, ERR_GETERROR(), Format, &VarArgs, true);
+
+    va_end(VarArgs);
+}
+
+void ERR_ADDERRORLOC(uint64_t ErrorID, char *FileName, uint32_t LineNumber, const char *Format, ...)
+{
+    extern char ERR_TEMPMES[];
+
+    // Setup to get the error messages
+    va_list VarArgs;
+    va_start(VarArgs, Format);
+
+    __ERR_ADDERROR(ErrorID, FileName, LineNumber, ERR_GETERROR(), Format, &VarArgs, true);
 
     va_end(VarArgs);
 }
@@ -367,12 +456,25 @@ void ERR_ADDERRORFOREIGN(uint64_t ErrorID, const char *ErrorMes, const char *For
     va_list VarArgs;
     va_start(VarArgs, Format);
 
-    __ERR_ADDERROR(ErrorID, ErrorMes, Format, &VarArgs, false);
+    __ERR_ADDERROR(ErrorID, NULL, 0, ErrorMes, Format, &VarArgs, false);
 
     va_end(VarArgs);
 }
 
-void __ERR_SETERROR(uint64_t ErrorID, const char *Format, va_list *VarArgs, bool OverwriteMessage)
+void ERR_ADDERRORFOREIGNLOC(uint64_t ErrorID, char *FileName, uint32_t LineNumber, const char *ErrorMes, const char *Format, ...)
+{
+    extern char ERR_TEMPMES[];
+
+    // Setup to get the error messages
+    va_list VarArgs;
+    va_start(VarArgs, Format);
+
+    __ERR_ADDERROR(ErrorID, FileName, LineNumber, ErrorMes, Format, &VarArgs, false);
+
+    va_end(VarArgs);
+}
+
+void __ERR_SETERROR(uint64_t ErrorID, char *FileName, uint32_t LineNumber, const char *Format, va_list *VarArgs, bool OverwriteMessage)
 {
     extern char ERR_CURRENTMES[];
     extern uint64_t ERR_ERRORTYPE;
@@ -393,7 +495,20 @@ void __ERR_SETERROR(uint64_t ErrorID, const char *Format, va_list *VarArgs, bool
     size_t Length;
 
     // Write error ID
-    Length = snprintf(String, MaxLength, "%I64X: ", ErrorID);
+    Length = snprintf(String, MaxLength, "%I64X", ErrorID);
+    String += Length;
+    MaxLength -= Length;
+
+    // Write file and line
+    if (FileName != NULL)
+    {
+        Length = snprintf(String, MaxLength, " (in \"%s\", line %I32u)", FileName, LineNumber);
+        String += Length;
+        MaxLength -= Length;
+    }
+
+    // Write :
+    Length = snprintf(String, MaxLength, ": ");
     String += Length;
     MaxLength -= Length;
 
@@ -494,9 +609,12 @@ void ERR_CLEARARCHIVE(void)
 #undef ERR_ERRORTYPE_REDUCE
 #undef ERR_GETERROR
 #undef ERR_SETERROR
+#undef ERR_SETERRORLOC
 #undef __ERR_ADDERROR
 #undef ERR_ADDERROR
+#undef ERR_ADDERRORLOC
 #undef ERR_ADDERRORFOREIGN
+#undef ERR_ADDERRORFOREIGNLOC
 #undef __ERR_SETERROR
 #undef ERR_CURRENTMES
 #undef ERR_RETURNMES
