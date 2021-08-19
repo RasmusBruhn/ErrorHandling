@@ -4,7 +4,7 @@ This header adds some error handling functions which makes it easier to do error
 creating/retrieving an error only uses one function and it can store an archive of messages.
 This header can be included multiple times given that the prefix is different.
 
-##Setup:
+## Setup:
 ----------------------------------------------------------------------------------------------------
 To include this header into your project you should first set the settings by defining macro constant, then the header should be included:
 
@@ -40,7 +40,7 @@ Example:
 #include "Error.h"
 ----------------------------------------------------------------------------------------------------
 
-ID:
+## ID:
 ----------------------------------------------------------------------------------------------------
 Error ID standard: The ID is a 64-bit unsigned integer with standard structure 0xLLLLLLLLFFFFTTEE.
 L: The library ID, each library created should have its own unique ID, programmes which are not 
@@ -64,7 +64,7 @@ error type. See the bottom of the document for a list of library IDs.
 ----------------------------------------------------------------------------------------------------
 
 
-Functions:
+## Functions:
 ----------------------------------------------------------------------------------------------------
 void _[Prefix]_SetError(uint64_t ErrorID, const char *Format, ...):
     Sets the error message so that it can be retrieved with "[Prefix]_GetError()".
@@ -154,7 +154,7 @@ uint64_t [Prefix]_GetErrorID(void):
     Return: The error ID.
 ----------------------------------------------------------------------------------------------------
 
-Library ID:
+## Library ID:
 ----------------------------------------------------------------------------------------------------
 Main programme/old libraries:                           0
 Debug:                                                  1
