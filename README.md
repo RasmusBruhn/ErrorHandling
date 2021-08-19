@@ -1,12 +1,12 @@
+# ErrorHandling documentation
 This is the documentation for the "Error.h" header file (ERR).
 This header adds some error handling functions which makes it easier to do error handling,
 creating/retrieving an error only uses one function and it can store an archive of messages.
 This header can be included multiple times given that the prefix is different.
 
-Setup:
+##Setup:
 ----------------------------------------------------------------------------------------------------
-To include this header into your project you should first set the settings by defining macro
-constant, then the header should be included:
+To include this header into your project you should first set the settings by defining macro constant, then the header should be included:
 
 ERR_PREFIX:         The prefix for all the functions created, defaults to [ERR].
 
@@ -74,6 +74,17 @@ void _[Prefix]_SetError(uint64_t ErrorID, const char *Format, ...):
 		Format:         The format of the message, follows printf standard.
         ...:            The variables used in Format, follows printf standard.
 
+void _[Prefix]_SetErrorLoc(uint64_t ErrorID, char *FileName, uint32_t LineNumber, const char *Format, ...):
+    Sets the error message so that it can be retrieved with "[Prefix]_GetError()". Adds filename and 
+    line number of the error to the message.
+    Return: Void
+    Arguments:
+        ErrorID:        The ID of the error that has occured.
+        FileName:       The name of the file in which the error occured.
+        LineNumber:     The line number where the error occured.
+		Format:         The format of the message, follows printf standard.
+        ...:            The variables used in Format, follows printf standard.
+
 void _[Prefix]_AddError(uint64_t ErrorID, const char *Format, ...):
     Sets the error message with reference to the last error message from this library.
     Return: Void
@@ -82,12 +93,35 @@ void _[Prefix]_AddError(uint64_t ErrorID, const char *Format, ...):
 		Format:         The format of the message, follows printf standard.
         ...:            The variables used in Format, follows printf standard.
 
+void _[Prefix]_AddErrorLoc(uint64_t ErrorID, char *FileName, uint32_t LineNumber, const char *Format, ...):
+    Sets the error message with reference to the last error message from this library. Adds filename and 
+    line number of the error to the message.
+    Return: Void
+    Arguments:
+        ErrorID:        The ID of the error that has occured.
+        FileName:       The name of the file in which the error occured.
+        LineNumber:     The line number where the error occured.
+		Format:         The format of the message, follows printf standard.
+        ...:            The variables used in Format, follows printf standard.
+
 void _[Prefix]_AddErrorForeign(uint64_t ErrorID, const char *ErrorMes, const char *Format, ...):
     Sets the error message with reference to another message.
     Return: Void
     Arguments:
         ErrorID:        The ID of the error that has occured.
-        ErrorMes:       The message to reference
+        ErrorMes:       The message to reference.
+		Format:         The format of the message, follows printf standard.
+        ...:            The variables used in Format, follows printf standard.
+
+void _[Prefix]_AddErrorForeignLoc(uint64_t ErrorID, char *FileName, uint32_t LineNumber, const char *ErrorMes, const char *Format, ...):
+    Sets the error message with reference to another message. Adds filename and line number of the error 
+    to the message.
+    Return: Void
+    Arguments:
+        ErrorID:        The ID of the error that has occured.
+        FileName:       The name of the file in which the error occured.
+        LineNumber:     The line number where the error occured.
+        ErrorMes:       The message to reference.
 		Format:         The format of the message, follows printf standard.
         ...:            The variables used in Format, follows printf standard.
 
