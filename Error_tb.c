@@ -85,7 +85,7 @@ int main(int argc, char **argv)
     printf("\n");
 
     // Test the log file
-    FILE *LogFile = fopen("c/ErrorHandling/ErrorLog.txt", "w+");
+    FILE *LogFile = fopen("ErrorLog.txt", "w+");
 
     if (LogFile == NULL)
         printf("Unable to open file: %s\n", strerror(errno));

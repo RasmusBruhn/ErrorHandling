@@ -152,4 +152,10 @@ These error IDs are just standard but any system can be used, just remember to c
 
 **Debug**: 1
 
+**Views**: 2
+
+**Settings**: 3
+
+**Files**: 4
+
 ----------------------------------------------------------------------------------------------------
