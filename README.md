@@ -158,4 +158,6 @@ These error IDs are just standard but any system can be used, just remember to c
 
 **Files**: 4
 
+**Hashing**: 5
+
 ----------------------------------------------------------------------------------------------------
