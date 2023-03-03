@@ -495,14 +495,14 @@ void __ERR_SETERROR(uint64_t ErrorID, char *FileName, uint32_t LineNumber, const
     size_t Length;
 
     // Write error ID
-    Length = snprintf(String, MaxLength, "0x%I64X", ErrorID);
+    Length = snprintf(String, MaxLength, "0x%lX", ErrorID);
     String += Length;
     MaxLength -= Length;
 
     // Write file and line
     if (FileName != NULL)
     {
-        Length = snprintf(String, MaxLength, " (in \"%s\", line: %I32u)", FileName, LineNumber);
+        Length = snprintf(String, MaxLength, " (in \"%s\", line: %u)", FileName, LineNumber);
         String += Length;
         MaxLength -= Length;
     }
