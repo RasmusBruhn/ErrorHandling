@@ -38,6 +38,23 @@
 // Returns nothing
 #define ERR_ERRORCLEAR ERR_SETUPNAME(ErrorClear)
 
+// Sets an error
+// Returns nothing
+// File: The path of the file in which the error occured
+// Line: The line at which the error occured
+// Format: The error message with printf format
+// ...: The format values for the Format string
+#define ERR_ERRORSET ERR_SETUPNAMEINT(ErrorSet)
+
+// Combines an error message and saves it
+// Returns nothing
+// File: The path of the file in which the error occured
+// Line: The line at which the error occured
+// Format: The error message with printf format
+// VarArgs: The format values for the Format string
+// OverwriteMessage: If true then it will overwrite the last error message
+#define __ERR_ERRORSET ERR_SETUPNAMEPRE(ErrorSet)
+
 // List of all saved error messages
 #define ERR_MESSAGELIST ERR_SETUPNAMEPRE(MessageList)
 
@@ -88,6 +105,24 @@ char *ERR_ERRARCHIVE(void);
 // Clears all of the errors
 // Returns nothing
 void ERR_ERRORCLEAR(void);
+
+// Sets an error
+// Returns nothing
+// File: The path of the file in which the error occured
+// Line: The line at which the error occured
+// Format: The error message with printf format
+// ...: The format values for the Format string
+void ERR_ERRORSET(const char* File, size_t Line, const char *Format, ...);
+
+// Combines an error message and saves it
+// Returns nothing
+// File: The path of the file in which the error occured
+// Line: The line at which the error occured
+// Format: The error message with printf format
+// VarArgs: The format values for the Format string
+// ErrorType: If it is an error or warning
+// OverwriteMessage: If true then it will overwrite the last error message
+void __ERR_ERRORSET(const char* File, size_t Line, const char *Format, va_list *VarArgs, bool ErrorType, bool OverwriteMessage);
 
 // List of all saved error messages
 ERR_ERRORMESTYPE *ERR_MESSAGELIST = NULL;
@@ -217,16 +252,99 @@ void ERR_ERRORCLEAR(void)
     ERR_MESSAGECOUNT = 0;
 }
 
-void ERR_ERRORSET(const char* File, uint32_t Line, const char *Format, ...)
+void ERR_ERRORSET(const char* File, size_t Line, const char *Format, ...)
 {
     // Setup to get the error messages
     va_list VarArgs;
     va_start(VarArgs, Format);
 
     // Set error message
-    __ERR_ERRORSET(File, Line, Format, &VarArgs, false);
+    __ERR_ERRORSET(File, Line, Format, &VarArgs, ERR_TYPEERROR, false);
 
     va_end(VarArgs);
+}
+
+void __ERR_ERRORSET(const char* File, size_t Line, const char *Format, va_list *VarArgs, bool ErrorType, bool OverwriteMessage)
+{
+    // Get the string to fill and the maximum length to fill it with
+    char *String = ERR_CURRENTMES;
+    size_t MaxLength = ERR_MAXLENGTH;
+    size_t Length;
+
+    // Write error ID
+    Length = snprintf(String, MaxLength, "0x%I64X", ErrorID);
+    String += Length;
+    MaxLength -= Length;
+
+    // Write file and line
+    if (FileName != NULL)
+    {
+        Length = snprintf(String, MaxLength, " (in \"%s\", line: %I32u)", FileName, LineNumber);
+        String += Length;
+        MaxLength -= Length;
+    }
+
+    // Write :
+    Length = snprintf(String, MaxLength, ": ");
+    String += Length;
+    MaxLength -= Length;
+
+    // Write the rest
+    int32_t OptimalLength = vsnprintf(String, MaxLength, Format, *VarArgs);
+
+    // Write ... if the message is too long
+    if (OptimalLength >= ERR_MAXLENGTH)
+    {
+        ERR_CURRENTMES[ERR_MAXLENGTH - 2] = '.';
+        ERR_CURRENTMES[ERR_MAXLENGTH - 3] = '.';
+        ERR_CURRENTMES[ERR_MAXLENGTH - 4] = '.';
+    }
+
+    // Add terminating character in case of overflow
+    //ERR_CURRENTMES[ERR_MAXLENGTH - 1] = '\0';
+
+    // Write to the error log
+    extern FILE *ERR_LOGFILE;
+
+    if (ERR_LOGFILE != NULL)
+    {
+        time_t CurTime;
+
+        time(&CurTime);
+
+        fprintf(ERR_LOGFILE, "%.24s: %s\n", ctime(&CurTime), ERR_CURRENTMES);
+    }
+
+    // Add error message to error message list
+    extern char ERR_ERRORMESLIST[];
+    extern uint32_t ERR_ERRORMESCOUNT;
+    extern uint32_t ERR_ERRORMESSTART;
+
+    // Find the position if there is space
+    int32_t Pos = ERR_ERRORMESCOUNT - ((OverwriteMessage) ? (1) : (0));
+    
+    if (Pos < 0)
+        Pos = 0;
+
+    // Increment the counter
+    ERR_ERRORMESCOUNT = Pos + 1;
+
+    Pos = (ERR_ERRORMESSTART + Pos) % ERR_MAXARCHIVED;
+
+    if (ERR_ERRORMESCOUNT > ERR_MAXARCHIVED)
+    {
+        ERR_ERRORMESCOUNT = ERR_MAXARCHIVED;
+        ERR_ERRORMESSTART = (ERR_ERRORMESSTART + 1) % ERR_MAXARCHIVED;
+    }
+
+    // Set message
+    snprintf(ERR_ERRORMESLIST + ERR_MAXLENGTH * Pos, ERR_MAXLENGTH, "%s", ERR_CURRENTMES);
+
+    // If the error type is too large then run exit function
+    extern void (*ERR_EXIT)(uint64_t ErrorID);
+
+    if (ErrorType >= ERR_THRESHOLD)
+        ERR_EXIT(ErrorID);
 }
 
 // Undefine definitions
@@ -248,3 +366,5 @@ void ERR_ERRORSET(const char* File, uint32_t Line, const char *Format, ...)
 #undef ERR_ERRORCLEAR
 #undef ERR_MESSAGECOUNT
 #undef ERR_ERRARCHIVE
+#undef ERR_ERRORSET
+#undef __ERR_ERRORSET
