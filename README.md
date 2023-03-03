@@ -160,4 +160,8 @@ These error IDs are just standard but any system can be used, just remember to c
 
 **Hashing**: 5
 
+**Dictionary**: 6
+
+**Random**: 7
+
 ----------------------------------------------------------------------------------------------------
