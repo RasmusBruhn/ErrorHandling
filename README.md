@@ -24,7 +24,7 @@ After including the header file you must define the 3 macro functions:
 #define ERR_PREFIX ERR
 #define ERR_MAXLENGTH 1000
 #define ERR_MAXARCHIVED 100
-#include "Error2.h"
+#include <Error2.h>
 #define _ERR_ErrorSet(Format, ...) __ERR_ErrorSet(__FILE__, __LINE__ __VA_OPT__(,) Format, __VA_ARGS__)
 #define _ERR_ErrorAdd(Format, ...) __ERR_ErrorAdd(__FILE__, __LINE__ __VA_OPT__(,) Format, __VA_ARGS__)
 #define _ERR_ErrorAddExternal(ExternalMessage, Format, ...) __ERR_ErrorAddExternal(__FILE__, __LINE__, ExternalMessage, Format __VA_OPT__(,) __VA_ARGS__)
