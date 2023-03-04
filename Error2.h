@@ -57,30 +57,30 @@ void __ERR_LogPrint(const char *Mes)
 #endif
 
 // Create names
-#define __ERR_SETUPNAME(NAME) ERR_PREFIX##_##NAME
-#define ERR_SETUPNAME(NAME) __ERR_SETUPNAME(NAME)
-#define __ERR_SETUPNAMEINT(NAME) _##ERR_PREFIX##_##NAME
-#define ERR_SETUPNAMEINT(NAME) __ERR_SETUPNAMEINT(NAME)
-#define __ERR_SETUPNAMEPRE(NAME) __##ERR_PREFIX##_##NAME
-#define ERR_SETUPNAMEPRE(NAME) __ERR_SETUPNAMEPRE(NAME)
-#define __ERR_SETUPNAMEHID(NAME) __##ERR_PREFIX##_ERR_##NAME
-#define ERR_SETUPNAMEHID(NAME) __ERR_SETUPNAMEHID(NAME)
+#define __ERR_SETUPNAME(NAME, PREFIX) PREFIX##_##NAME
+#define ERR_SETUPNAME(NAME, PREFIX) __ERR_SETUPNAME(NAME, PREFIX)
+#define __ERR_SETUPNAMEINT(NAME, PREFIX) _##PREFIX##_##NAME
+#define ERR_SETUPNAMEINT(NAME, PREFIX) __ERR_SETUPNAMEINT(NAME, PREFIX)
+#define __ERR_SETUPNAMEPRE(NAME, PREFIX) __##PREFIX##_##NAME
+#define ERR_SETUPNAMEPRE(NAME, PREFIX) __ERR_SETUPNAMEPRE(NAME, PREFIX)
+#define __ERR_SETUPNAMEHID(NAME, PREFIX) __##PREFIX##_ERR_##NAME
+#define ERR_SETUPNAMEHID(NAME, PREFIX) __ERR_SETUPNAMEHID(NAME, PREFIX)
 
 // Gets the error message
 // Returns a copy of the error string
-#define ERR_ERRORGET ERR_SETUPNAME(ErrorGet)
+#define ERR_ERRORGET ERR_SETUPNAME(ErrorGet, ERR_PREFIX)
 
 // Gets the first archieved error
 // Returns the first archieved error which must be freed by the user, NULL if non are available
-#define ERR_ERRARCHIVE ERR_SETUPNAME(ErrorArchive)
+#define ERR_ERRARCHIVE ERR_SETUPNAME(ErrorArchive, ERR_PREFIX)
 
 // Clears all of the errors
 // Returns nothing
-#define ERR_ERRORCLEAR ERR_SETUPNAME(ErrorClear)
+#define ERR_ERRORCLEAR ERR_SETUPNAME(ErrorClear, ERR_PREFIX)
 
 // Cleans up everything when a memory error occures
 // Returns nothing
-#define ERR_MEMORYERRORCLEAN ERR_SETUPNAMEHID(MemoryErrorClean)
+#define ERR_MEMORYERRORCLEAN ERR_SETUPNAMEHID(MemoryErrorClean, ERR_PREFIX)
 
 // Sets an error
 // Returns nothing
@@ -88,7 +88,7 @@ void __ERR_LogPrint(const char *Mes)
 // Line: The line at which the error occured
 // Format: The error message with printf format
 // ...: The format values for the Format string
-#define ERR_ERRORSET ERR_SETUPNAMEPRE(ErrorSet)
+#define ERR_ERRORSET ERR_SETUPNAMEPRE(ErrorSet, ERR_PREFIX)
 
 // Adds an error to the previous error
 // Returns nothing
@@ -96,7 +96,7 @@ void __ERR_LogPrint(const char *Mes)
 // Line: The line at which the error occured
 // Format: The error message with printf format
 // ...: The format values for the Format string
-#define ERR_ERRORADD ERR_SETUPNAMEPRE(ErrorAdd)
+#define ERR_ERRORADD ERR_SETUPNAMEPRE(ErrorAdd, ERR_PREFIX)
 
 // Adds an error to an external error
 // Returns nothing
@@ -105,7 +105,7 @@ void __ERR_LogPrint(const char *Mes)
 // ExternalMessage: The error message for the external error
 // Format: The error message with printf format
 // ...: The format values for the Format string
-#define ERR_ERRORADDEXTERNAL ERR_SETUPNAMEPRE(ErrorAddExternal)
+#define ERR_ERRORADDEXTERNAL ERR_SETUPNAMEPRE(ErrorAddExternal, ERR_PREFIX)
 
 // Combines an error message and saves it
 // Returns nothing
@@ -114,29 +114,29 @@ void __ERR_LogPrint(const char *Mes)
 // Format: The error message with printf format
 // VarArgs: The format values for the Format string
 // OverwriteMessage: If true then it will overwrite the last error message
-#define __ERR_ERRORSET ERR_SETUPNAMEHID(ErrorSet)
+#define __ERR_ERRORSET ERR_SETUPNAMEHID(ErrorSet, ERR_PREFIX)
 
 // List of all saved error messages
-#define ERR_MESSAGELIST ERR_SETUPNAMEHID(MessageList)
+#define ERR_MESSAGELIST ERR_SETUPNAMEHID(MessageList, ERR_PREFIX)
 
 // The last message that occured
-#define ERR_MESSAGELAST ERR_SETUPNAMEHID(MessageLast)
+#define ERR_MESSAGELAST ERR_SETUPNAMEHID(MessageLast, ERR_PREFIX)
 
 // True if there is an error ready
-#define ERR_ERRORACTIVE ERR_SETUPNAMEHID(ErrorActive)
+#define ERR_ERRORACTIVE ERR_SETUPNAMEHID(ErrorActive, ERR_PREFIX)
 
 // The number of stored error messages
-#define ERR_MESSAGECOUNT ERR_SETUPNAMEHID(MessageCount)
+#define ERR_MESSAGECOUNT ERR_SETUPNAMEHID(MessageCount, ERR_PREFIX)
 
 // The current message
-#define ERR_CURRENTMES ERR_SETUPNAMEHID(CurrentMes)
+#define ERR_CURRENTMES ERR_SETUPNAMEHID(CurrentMes, ERR_PREFIX)
 
 // True if a memory error has occured
-#define ERR_MEMORYERROR ERR_SETUPNAMEHID(MemoryError)
+#define ERR_MEMORYERROR ERR_SETUPNAMEHID(MemoryError, ERR_PREFIX)
 
 // Struct to save error type
-#define __ERR_ERRORMESTYPE ERR_SETUPNAMEHID(__ErrorType)
-#define ERR_ERRORMESTYPE ERR_SETUPNAMEHID(ErrorType)
+#define __ERR_ERRORMESTYPE ERR_SETUPNAMEHID(__ErrorType, ERR_PREFIX)
+#define ERR_ERRORMESTYPE ERR_SETUPNAMEHID(ErrorType, ERR_PREFIX)
 
 // Standard message if a memory error occured
 #define ERR_MEMORYERRORMES "Unable to allocate memory"
@@ -202,7 +202,7 @@ void ERR_ERRORADDEXTERNAL(const char *File, size_t Line, const char *ExternalMes
 // VarArgs: The format values for the Format string
 // ErrorType: If it is an error or warning
 // OverwriteMessage: If true then it will overwrite the last error message
-void __ERR_ERRORSET(const char *File, size_t Line, const char *Format, va_list *VarArgs, const char *PrevMes, bool OverwriteMessage);
+void __ERR_ERRORSET(const char *File, size_t Line, const char *Format, va_list VarArgs, const char *PrevMes, bool OverwriteMessage);
 
 // List of all saved error messages
 ERR_ERRORMESTYPE *ERR_MESSAGELIST = NULL;
@@ -253,9 +253,9 @@ char *ERR_ERRORGET(void)
         ERR_MEMORYERRORCLEAN();
         return ERR_MEMORYERRORMES;
     }
-
+    
     // Copy error
-    strncpy(ERR_CURRENTMES, ERR_MESSAGELAST->mes, Length);
+    snprintf(ERR_CURRENTMES, Length + 1, "%s", ERR_MESSAGELAST->mes);
 
     // Make sure it does not give the same message twice
     ERR_ERRORACTIVE = false;
@@ -363,7 +363,7 @@ void ERR_ERRORSET(const char* File, size_t Line, const char *Format, ...)
     va_start(VarArgs, Format);
 
     // Set error message
-    __ERR_ERRORSET(File, Line, Format, &VarArgs, NULL, false);
+    __ERR_ERRORSET(File, Line, Format, VarArgs, NULL, false);
 
     va_end(VarArgs);
 }
@@ -378,10 +378,10 @@ void ERR_ERRORADD(const char *File, size_t Line, const char *Format, ...)
 
     // Set error message
     if (ERR_MESSAGELAST == NULL)
-        __ERR_ERRORSET(File, Line, Format, &VarArgs, NULL, false);
+        __ERR_ERRORSET(File, Line, Format, VarArgs, NULL, false);
 
     else
-        __ERR_ERRORSET(File, Line, Format, &VarArgs, ERR_MESSAGELAST->mes, true);
+        __ERR_ERRORSET(File, Line, Format, VarArgs, ERR_MESSAGELAST->mes, true);
 
     va_end(VarArgs);
 }
@@ -393,12 +393,12 @@ void ERR_ERRORADDEXTERNAL(const char *File, size_t Line, const char *ExternalMes
     va_start(VarArgs, Format);
 
     // Set error message
-    __ERR_ERRORSET(File, Line, Format, &VarArgs, ExternalMessage, false);
+    __ERR_ERRORSET(File, Line, Format, VarArgs, ExternalMessage, false);
 
     va_end(VarArgs);
 }
 
-void __ERR_ERRORSET(const char* File, size_t Line, const char *Format, va_list *VarArgs, const char *PrevMes, bool OverwriteMessage)
+void __ERR_ERRORSET(const char* File, size_t Line, const char *Format, va_list VarArgs, const char *PrevMes, bool OverwriteMessage)
 {
     extern ERR_ERRORMESTYPE *ERR_MESSAGELIST;
     extern ERR_ERRORMESTYPE *ERR_MESSAGELAST;
@@ -446,10 +446,10 @@ void __ERR_ERRORSET(const char* File, size_t Line, const char *Format, va_list *
 
     // Fill values
     ErrorMes->next = NULL;
-    snprintf(ErrorMes->mes, Length + 1, "\"%s\" Line %lu: %s", File, Line, Mes);
+    snprintf(ErrorMes->mes, Length + 1, "\"%s\" line %lu: %s", File, Line, Mes);
 
     if (PrevMes != NULL)
-        snprintf(ErrorMes->mes + Length, ExtraLength + 1, " <- %s");
+        snprintf(ErrorMes->mes + Length, ExtraLength + 1, " <- %s", PrevMes);
 
     // Print to file
     __ERR_LogPrint(ErrorMes->mes);

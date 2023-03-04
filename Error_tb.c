@@ -3,113 +3,128 @@
 #include <stdint.h>
 #include <errno.h>
 
-void TestExit(uint64_t ErrorID);
-
+#define ERR_PREFIX ERR1
 #define ERR_MAXARCHIVED 3
-#define ERR_MAXLENGTH 50
-#define ERR_EXITFUNC &TestExit
-#include "Error.h"
+#define ERR_MAXLENGTH 10
+#include "Error2.h"
+#define _ERR1_ErrorSet(Format, ...) __ERR1_ErrorSet(__FILE__, __LINE__, Format __VA_OPT__(,) __VA_ARGS__)
+#define _ERR1_ErrorAdd(Format, ...) __ERR1_ErrorAdd(__FILE__, __LINE__, Format __VA_OPT__(,) __VA_ARGS__)
+#define _ERR1_ErrorAddExternal(ExternalMessage, Format, ...) __ERR1_ErrorAddExternal(__FILE__, __LINE__, ExternalMessage, Format __VA_OPT__(,) __VA_ARGS__)
+
+#define ERR_PREFIX ERR2
+#define ERR_MAXARCHIVED 1
+#define ERR_MAXLENGTH 100
+#include "Error2.h"
+#define _ERR2_ErrorSet(Format, ...) __ERR2_ErrorSet(__FILE__, __LINE__, Format __VA_OPT__(, ) __VA_ARGS__)
+#define _ERR2_ErrorAdd(Format, ...) __ERR2_ErrorAdd(__FILE__, __LINE__, Format __VA_OPT__(, ) __VA_ARGS__)
+#define _ERR2_ErrorAddExternal(ExternalMessage, Format, ...) __ERR2_ErrorAddExternal(__FILE__, __LINE__, ExternalMessage, Format __VA_OPT__(, ) __VA_ARGS__)
 
 int main(int argc, char **argv)
 {
-    // Test error type and ID
-    printf("Error type initialisation: %lu\nError ID initialisation: %lX\n\n", ERR_GetErrorType(), ERR_GetErrorID());
+    int ErrorID = 0;
 
-    // Test error message initialisation
-    printf("Error message initialisation: %s\n\n", ERR_GetError());
-
-    // Test an error message
-    _ERR_SetError(0x11100000101, "First error %d", 1);
-    printf("Error message: %s\n\n", ERR_GetError());
-
-    // Test updated error type and ID
-    printf("Error type updated: %lu\nError ID updated: %lX\n\n", ERR_GetErrorType(), ERR_GetErrorID());
-
-    // Test added message
-    _ERR_AddError(0x00000202, "Second error %d", 2);
-    printf("Error message added: %s\n\n", ERR_GetError());
-
-    // Test updated error type and ID
-    printf("Error type updated: %lu\nError ID updated: %lX\n\n", ERR_GetErrorType(), ERR_GetErrorID());
-
-    // Test foreign message
-    _ERR_AddErrorForeign(0x00000303, "Foreign", "Third error %d", 3);
-    printf("Error message foreign added: %s\n\n", ERR_GetError());
-
-    // Test updated error type ID
-    printf("Error type updated: %lu\nError ID updated: %lX\n\n", ERR_GetErrorType(), ERR_GetErrorID());
-
-    // Test too long
-    _ERR_SetError(0x05430121, "1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ");
-    printf("Error message too long: %s\n\n", ERR_GetError());
-
-    // Test %
-    _ERR_AddErrorForeign(0x00000104, "Test %", "Test");
-    printf("Error message with %%: %s\n\n", ERR_GetError());
-
-    // Test updated error type and ID
-    printf("Error type updated: %lu\nError ID updated: %lX\n\n", ERR_GetErrorType(), ERR_GetErrorID());
-
-    // Test line number
-    printf("Testing line number:\n");
-    
-    _ERR_SetErrorLoc(0x0105, "FileName", 100, "Error with location");
-    printf("Testing SetError: %s\n", ERR_GetError());
-
-    _ERR_SetErrorLoc(0x0106, "FileName2", 200, "Add error with location 1");
-    _ERR_AddErrorLoc(0x0107, "FileName2", 300, "Add error with location 2");
-    printf("Testing AddError: %s\n", ERR_GetError());
-
-    _ERR_AddErrorForeignLoc(0x0108, "FileName3", 400, "Foreign message", "Add error foreign with location");
-    printf("Testing AddErrorForeign: %s\n\n", ERR_GetError());
-
-    // Test the log
-    ERR_ClearArchive();
-    _ERR_SetError(1, "1");
-    _ERR_SetError(2, "2");
-    _ERR_AddError(3, "3");
-    printf("Error log:\n");
-    char *Mes = NULL;
-    while ((Mes = ERR_GetArchivedError()) != NULL) printf("Message: %s\n", Mes);
-    printf("\n");
-
-    // Test log overflow
-    ERR_ClearArchive();
-    _ERR_SetError(1, "1");
-    _ERR_SetError(2, "2");
-    _ERR_SetError(3, "3");
-    _ERR_SetError(4, "4");
-    _ERR_SetError(5, "5");
-    printf("Error log overflow:\n");
-    while ((Mes = ERR_GetArchivedError()) != NULL) printf("Message: %s\n", Mes);
-    printf("\n");
-
-    // Test the log file
-    FILE *LogFile = fopen("ErrorLog.txt", "w+");
-
-    if (LogFile == NULL)
-        printf("Unable to open file: %s\n", strerror(errno));
-
-    _ERR_SetLogFile(LogFile);
+    // Test no error
+    printf("Testing no error (%d):\n", ErrorID);
+    printf("%s\n", ERR1_ErrorGet());
 
     // Test normal error
-    _ERR_SetError(0x0101, "First error");
+    printf("\nTesting normal error (%d):\n", ErrorID);
+    _ERR1_ErrorSet("Error %d", ++ErrorID);
+    printf("%s\n", ERR1_ErrorGet());
+    printf("%s\n", ERR1_ErrorGet());
 
-    // Test foreign
-    _ERR_AddErrorForeign(0x0102, "Foreign error", "Second error");
+    // Test add error
+    printf("\nTesting add error (%d):\n", ErrorID);
+    _ERR1_ErrorAdd("Error %d", ++ErrorID);
+    printf("%s\n", ERR1_ErrorGet());
 
-    // Test adding error
-    _ERR_SetError(0x0103, "Third error");
-    _ERR_AddError(0x0104, "Fourth error");    
+    // Test external error
+    printf("\nTesting add external error (%d):\n", ErrorID);
+    _ERR1_ErrorAddExternal("External Error", "Error %d", ++ErrorID);
+    printf("%s\n", ERR1_ErrorGet());
 
-    fclose(LogFile);
+    // Test archive
+    printf("\nTesting archive (%d):\n", ErrorID);
+    _ERR1_ErrorSet("Error %d", ++ErrorID);
+    for (char *Mes = ERR1_ErrorArchive(); Mes != NULL; Mes = ERR1_ErrorArchive())
+        printf("%s\n", Mes);
+    printf("%s\n", ERR1_ErrorGet());
 
-    printf("Done\n");
+    // Testing clear
+    printf("\nTesting clear (%d):\n", ErrorID);
+    _ERR1_ErrorSet("Error %d", ++ErrorID);
+    _ERR1_ErrorSet("Error %d", ++ErrorID);
+    ERR1_ErrorClear();
+    for (char *Mes = ERR1_ErrorArchive(); Mes != NULL; Mes = ERR1_ErrorArchive())
+        printf("%s\n", Mes);
+    printf("%s\n", ERR1_ErrorGet());
+
+    // Testing overflow of message
+    printf("\nTesting message overflow (%d):\n", ErrorID);
+    _ERR1_ErrorSet("This is a very long message");
+    printf("%s\n", ERR1_ErrorGet());
+
+    // Testing overflow of errors
+    printf("\nTesting archive overflow (%d):\n", ErrorID);
+    for (int i = 0; i < 5; ++i)
+        _ERR1_ErrorSet("Error %d", ++ErrorID);
+    for (char *Mes = ERR1_ErrorArchive(); Mes != NULL; Mes = ERR1_ErrorArchive())
+        printf("%s\n", Mes);
+
+    // Testing file
+    FILE *Log1 = fopen("ErrorLog1.txt", "w");
+    ERR_LogCreate(Log1);
+    _ERR1_ErrorSet("Error %d", ++ErrorID);
+    _ERR1_ErrorAdd("Error %d", ++ErrorID);
+
+    // Testing file overwrite
+    FILE *Log2 = fopen("ErrorLog2.txt", "w");
+    ERR_LogCreate(Log2);
+    _ERR1_ErrorSet("Error %d", ++ErrorID);
+    _ERR1_ErrorAdd("Error %d", ++ErrorID);
+
+    // Testing file removal
+    ERR_LogDestroy();
+    _ERR1_ErrorSet("Error %d", ++ErrorID);
+    _ERR1_ErrorAdd("Error %d", ++ErrorID);
+
+    // Testing 2 error imports
+    printf("\nTesting 2 imports (%d):\n", ErrorID);
+    ERR1_ErrorClear();
+    _ERR1_ErrorSet("Error %d", ++ErrorID);
+    _ERR2_ErrorSet("Error %d", ++ErrorID);
+    _ERR1_ErrorSet("Error %d", ++ErrorID);
+    _ERR2_ErrorSet("Error %d", ++ErrorID);
+    _ERR1_ErrorAdd("Error %d", ++ErrorID);
+    _ERR2_ErrorAdd("Error %d", ++ErrorID);
+    printf("%s\n", ERR1_ErrorGet());
+    printf("%s\n", ERR2_ErrorGet());
+    for (char *Mes = ERR1_ErrorArchive(); Mes != NULL; Mes = ERR1_ErrorArchive())
+        printf("%s\n", Mes);
+    for (char *Mes = ERR2_ErrorArchive(); Mes != NULL; Mes = ERR2_ErrorArchive())
+        printf("%s\n", Mes);
+
+    // Test 2 error imports with file
+    FILE *Log3 = fopen("ErrorLog3.txt", "w");
+    ERR_LogCreate(Log3);
+    _ERR1_ErrorSet("Error %d", ++ErrorID);
+    _ERR1_ErrorAdd("Error %d", ++ErrorID);
+    _ERR2_ErrorSet("Error %d", ++ErrorID);
+    _ERR2_ErrorAdd("Error %d", ++ErrorID);
+    _ERR1_ErrorSet("Error %d", ++ErrorID);
+    _ERR1_ErrorAdd("Error %d", ++ErrorID);
+    _ERR2_ErrorSet("Error %d", ++ErrorID);
+    _ERR2_ErrorAdd("Error %d", ++ErrorID);
+
+    ERR1_ErrorClear();
+    ERR2_ErrorClear();
+    ERR_LogDestroy();
+
+    fclose(Log1);
+    fclose(Log2);
+    fclose(Log3);
+
+    printf("\nDone\n");
 
     return 0;
-}
-
-void TestExit(uint64_t ErrorID)
-{
-    printf("Exit function worked\n\n");
 }
