@@ -14,8 +14,46 @@
 #define ERR_MAXARCHIVED 100 // The maximum number of archived messages
 #endif
 
-#ifndef ERR_MERGE
-#define ERR_MERGE " <- " // How to merge error messages
+#ifndef ERR_MAXLENGTH
+#define ERR_MAXLENGTH 1000 // The maximum length of the formatted error message, the actual error message can be longer
+#endif
+
+// Set up logging
+#ifndef ERR_INCLUDED
+#define ERR_INCLUDED
+
+// The file to log to
+FILE *__ERR_LogFile = NULL;
+
+// Sets the log file, will overwrite any existing log files
+// Returns nothing
+// File: The file pointer of the log file
+void ERR_LogCreate(FILE *File)
+{
+    extern FILE *__ERR_LogFile;
+
+    __ERR_LogFile = File;
+}
+
+// Removes the log file, make sure to run this before closing the file
+// Returns nothing
+void ERR_LogDestroy(void)
+{
+    extern FILE *__ERR_LogFile;
+
+    __ERR_LogFile = NULL;
+}
+
+// Prints to the log file if it exists
+// Returns nothing
+void __ERR_LogPrint(const char *Mes)
+{
+    extern FILE *__ERR_LogFile;
+
+    if (__ERR_LogFile != NULL)
+        fprintf(__ERR_LogFile, "%s\n", Mes);
+}
+
 #endif
 
 // Create names
@@ -37,6 +75,10 @@
 // Clears all of the errors
 // Returns nothing
 #define ERR_ERRORCLEAR ERR_SETUPNAME(ErrorClear)
+
+// Cleans up everything when a memory error occures
+// Returns nothing
+#define ERR_MEMORYERRORCLEAN ERR_SETUPNAMEPRE(MemoryErrorClean)
 
 // Sets an error
 // Returns nothing
@@ -61,6 +103,9 @@
 // The last message that occured
 #define ERR_MESSAGELAST ERR_SETUPNAMEPRE(MessageLast)
 
+// True if there is an error ready
+#define ERR_ERRORACTIVE ERR_SETUPNAMEPRE(ErrorActive)
+
 // The number of stored error messages
 #define ERR_MESSAGECOUNT ERR_SETUPNAMEPRE(MessageCount)
 
@@ -80,17 +125,12 @@
 // If no error has occured
 #define ERR_NOERRORMES "No error has occured"
 
-// Error types
-#define ERR_TYPEERROR true
-#define ERR_TYPEWARNING false
-
 typedef struct __ERR_ERRORMESTYPE ERR_ERRORMESTYPE;
 
 // Struct to save error type
 struct __ERR_ERRORMESTYPE 
 {
     char *mes;
-    bool type;
     ERR_ERRORMESTYPE *next;
 };
 
@@ -105,6 +145,10 @@ char *ERR_ERRARCHIVE(void);
 // Clears all of the errors
 // Returns nothing
 void ERR_ERRORCLEAR(void);
+
+// Cleans up everything when a memory error occures
+// Returns nothing
+void ERR_MEMORYERRORCLEAN(void);
 
 // Sets an error
 // Returns nothing
@@ -122,13 +166,16 @@ void ERR_ERRORSET(const char* File, size_t Line, const char *Format, ...);
 // VarArgs: The format values for the Format string
 // ErrorType: If it is an error or warning
 // OverwriteMessage: If true then it will overwrite the last error message
-void __ERR_ERRORSET(const char* File, size_t Line, const char *Format, va_list *VarArgs, bool ErrorType, bool OverwriteMessage);
+void __ERR_ERRORSET(const char *File, size_t Line, const char *Format, va_list *VarArgs, const char *PrevMes, bool OverwriteMessage);
 
 // List of all saved error messages
 ERR_ERRORMESTYPE *ERR_MESSAGELIST = NULL;
 
 // The last message that ocured, NULL if it has already been given
 ERR_ERRORMESTYPE *ERR_MESSAGELAST = NULL;
+
+// True if there is an error ready
+bool ERR_ERRORACTIVE = false;
 
 // The number of stored error messages
 size_t ERR_MESSAGECOUNT = 0;
@@ -142,6 +189,7 @@ bool ERR_MEMORYERROR = false;
 char *ERR_ERRORGET(void)
 {
     extern ERR_ERRORMESTYPE *ERR_MESSAGELAST;
+    extern bool ERR_ERRORACTIVE;
     extern char *ERR_CURRENTMES;
     extern bool ERR_MEMORYERROR;
 
@@ -157,7 +205,7 @@ char *ERR_ERRORGET(void)
     }
 
     // Make sure there is an error
-    if (ERR_MESSAGELAST == NULL)
+    if (!ERR_ERRORACTIVE)
         return ERR_NOERRORMES;
 
     // Get memory for new message
@@ -166,7 +214,7 @@ char *ERR_ERRORGET(void)
 
     if (ERR_CURRENTMES == NULL)
     {
-        ERR_MEMORYERROR = true;
+        ERR_MEMORYERRORCLEAN();
         return ERR_MEMORYERRORMES;
     }
 
@@ -174,7 +222,7 @@ char *ERR_ERRORGET(void)
     strncpy(ERR_CURRENTMES, ERR_MESSAGELAST->mes, Length);
 
     // Make sure it does not give the same message twice
-    ERR_MESSAGELAST = NULL;
+    ERR_ERRORACTIVE = false;
 
     return ERR_CURRENTMES;
 }
@@ -183,6 +231,7 @@ char *ERR_ERRARCHIVE(void)
 {
     extern ERR_ERRORMESTYPE *ERR_MESSAGELIST;
     extern ERR_ERRORMESTYPE *ERR_MESSAGELAST;
+    extern bool ERR_ERRORACTIVE;
     extern size_t ERR_MESSAGECOUNT;
     extern char *ERR_CURRENTMES;
     extern bool ERR_MEMORYERROR;
@@ -212,7 +261,10 @@ char *ERR_ERRARCHIVE(void)
 
     // Remove last message
     if (NextError == NULL)
+    {
         ERR_MESSAGELAST = NULL;
+        ERR_ERRORACTIVE = false;
+    }
 
     // Update the message count
     --ERR_MESSAGECOUNT;
@@ -224,6 +276,7 @@ void ERR_ERRORCLEAR(void)
 {
     extern ERR_ERRORMESTYPE *ERR_MESSAGELIST;
     extern ERR_ERRORMESTYPE *ERR_MESSAGELAST;
+    extern bool ERR_ERRORACTIVE;
     extern size_t ERR_MESSAGECOUNT;
     extern char *ERR_CURRENTMES;
 
@@ -240,6 +293,7 @@ void ERR_ERRORCLEAR(void)
 
     // Set last message to NULL
     ERR_MESSAGELAST = NULL;
+    ERR_ERRORACTIVE = false;
 
     // Free current message
     if (ERR_CURRENTMES != NULL)
@@ -252,6 +306,20 @@ void ERR_ERRORCLEAR(void)
     ERR_MESSAGECOUNT = 0;
 }
 
+void ERR_MEMORYERRORCLEAN(void)
+{
+    extern bool ERR_MEMORYERROR;
+
+    // Set the memory error to true
+    ERR_MEMORYERROR = true;
+
+    // Clear the errors
+    ERR_ERRORCLEAR();
+
+    // Write to file
+    __ERR_LogPrint(ERR_MEMORYERRORMES);
+}
+
 void ERR_ERRORSET(const char* File, size_t Line, const char *Format, ...)
 {
     // Setup to get the error messages
@@ -259,98 +327,105 @@ void ERR_ERRORSET(const char* File, size_t Line, const char *Format, ...)
     va_start(VarArgs, Format);
 
     // Set error message
-    __ERR_ERRORSET(File, Line, Format, &VarArgs, ERR_TYPEERROR, false);
+    __ERR_ERRORSET(File, Line, Format, &VarArgs, NULL, false);
 
     va_end(VarArgs);
 }
 
-void __ERR_ERRORSET(const char* File, size_t Line, const char *Format, va_list *VarArgs, bool ErrorType, bool OverwriteMessage)
+void __ERR_ERRORSET(const char* File, size_t Line, const char *Format, va_list *VarArgs, const char *PrevMes, bool OverwriteMessage)
 {
-    // Get the string to fill and the maximum length to fill it with
-    char *String = ERR_CURRENTMES;
-    size_t MaxLength = ERR_MAXLENGTH;
-    size_t Length;
+    extern ERR_ERRORMESTYPE *ERR_MESSAGELIST;
+    extern ERR_ERRORMESTYPE *ERR_MESSAGELAST;
+    extern bool ERR_ERRORACTIVE;
+    extern size_t ERR_MESSAGECOUNT;
+    extern bool ERR_MEMORYERROR;
 
-    // Write error ID
-    Length = snprintf(String, MaxLength, "0x%I64X", ErrorID);
-    String += Length;
-    MaxLength -= Length;
+    // Make sure there is no memory error
+    if (ERR_MEMORYERROR)
+        return;
 
-    // Write file and line
-    if (FileName != NULL)
-    {
-        Length = snprintf(String, MaxLength, " (in \"%s\", line: %I32u)", FileName, LineNumber);
-        String += Length;
-        MaxLength -= Length;
-    }
+    // Get the formatted string
+    char Mes[ERR_MAXLENGTH + 1];
+    vsnprintf(Mes, ERR_MAXLENGTH + 1, Format, VarArgs);
 
-    // Write :
-    Length = snprintf(String, MaxLength, ": ");
-    String += Length;
-    MaxLength -= Length;
-
-    // Write the rest
-    int32_t OptimalLength = vsnprintf(String, MaxLength, Format, *VarArgs);
-
-    // Write ... if the message is too long
-    if (OptimalLength >= ERR_MAXLENGTH)
-    {
-        ERR_CURRENTMES[ERR_MAXLENGTH - 2] = '.';
-        ERR_CURRENTMES[ERR_MAXLENGTH - 3] = '.';
-        ERR_CURRENTMES[ERR_MAXLENGTH - 4] = '.';
-    }
-
-    // Add terminating character in case of overflow
-    //ERR_CURRENTMES[ERR_MAXLENGTH - 1] = '\0';
-
-    // Write to the error log
-    extern FILE *ERR_LOGFILE;
-
-    if (ERR_LOGFILE != NULL)
-    {
-        time_t CurTime;
-
-        time(&CurTime);
-
-        fprintf(ERR_LOGFILE, "%.24s: %s\n", ctime(&CurTime), ERR_CURRENTMES);
-    }
-
-    // Add error message to error message list
-    extern char ERR_ERRORMESLIST[];
-    extern uint32_t ERR_ERRORMESCOUNT;
-    extern uint32_t ERR_ERRORMESSTART;
-
-    // Find the position if there is space
-    int32_t Pos = ERR_ERRORMESCOUNT - ((OverwriteMessage) ? (1) : (0));
+    // Calculate the length of the error
+    size_t Digits = 0;
     
-    if (Pos < 0)
-        Pos = 0;
+    for (size_t LineDigits = Line; LineDigits > 0; LineDigits /= 10)
+        ++Digits;
 
-    // Increment the counter
-    ERR_ERRORMESCOUNT = Pos + 1;
+    size_t Length = strlen(File) + Digits + 10 + strlen(Mes);
+    size_t ExtraLength = 0;
+    
+    if (PrevMes != NULL)
+        ExtraLength = strlen(PrevMes) + 4;
 
-    Pos = (ERR_ERRORMESSTART + Pos) % ERR_MAXARCHIVED;
+    // Create the new error
+    ERR_ERRORMESTYPE *ErrorMes = (ERR_ERRORMESTYPE *)malloc(sizeof(ERR_ERRORMESTYPE));
 
-    if (ERR_ERRORMESCOUNT > ERR_MAXARCHIVED)
+    if (ErrorMes == NULL)
     {
-        ERR_ERRORMESCOUNT = ERR_MAXARCHIVED;
-        ERR_ERRORMESSTART = (ERR_ERRORMESSTART + 1) % ERR_MAXARCHIVED;
+        ERR_MEMORYERRORCLEAN();
+        return;
     }
 
-    // Set message
-    snprintf(ERR_ERRORMESLIST + ERR_MAXLENGTH * Pos, ERR_MAXLENGTH, "%s", ERR_CURRENTMES);
+    // Add the message
+    ErrorMes->mes = (char *)malloc(sizeof(char) * (Length + ExtraLength + 1));
 
-    // If the error type is too large then run exit function
-    extern void (*ERR_EXIT)(uint64_t ErrorID);
+    if (ErrorMes->mes == NULL)
+    {
+        ERR_MEMORYERRORCLEAN();
+        return;
+    }
 
-    if (ErrorType >= ERR_THRESHOLD)
-        ERR_EXIT(ErrorID);
+    // Fill values
+    ErrorMes->next = NULL;
+    snprintf(ErrorMes->mes, Length + 1, "\"%s\" Line %lu: %s", File, Line, Mes);
+
+    if (PrevMes != NULL)
+        snprintf(ErrorMes->mes + Length, ExtraLength + 1, " <- %s");
+
+    // Print to file
+    __ERR_LogPrint(ErrorMes->mes);
+
+    // Add it to the list
+    if (ERR_MESSAGELAST != NULL)
+    {
+        if (OverwriteMessage)
+        {
+            free(ERR_MESSAGELAST->mes);
+            ERR_MESSAGELAST->mes = ErrorMes->mes;
+            free(ErrorMes);
+            ErrorMes = ERR_MESSAGELAST;
+            --ERR_MESSAGECOUNT;
+        }
+
+        else
+            ERR_MESSAGELAST->next = ErrorMes;
+    }
+
+    ERR_MESSAGELAST = ErrorMes;
+    ERR_ERRORACTIVE = true;
+    ++ERR_MESSAGECOUNT;
+
+    // Add it to the start of the list
+    if (ERR_MESSAGELIST == NULL)
+        ERR_MESSAGELIST = ErrorMes;
+
+    // Remove from start of message list if needed
+    if (ERR_MESSAGECOUNT > ERR_MAXARCHIVED)
+    {
+        ERR_ERRORMESTYPE *NewList = ERR_MESSAGELIST->next;
+        free(ERR_MESSAGELIST->mes);
+        free(ERR_MESSAGELIST);
+        ERR_MESSAGELIST = NewList;
+        --ERR_MESSAGECOUNT;
+    }
 }
 
 // Undefine definitions
 #undef ERR_PREFIX
 #undef ERR_MAXARCHIVED
-#undef ERR_MERGE
 #undef ERR_MESSAGELIST
 #undef ERR_MESSAGELAST
 #undef ERR_CURRENTMES
