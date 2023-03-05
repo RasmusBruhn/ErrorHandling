@@ -125,7 +125,6 @@ int main(int argc, char **argv)
     fclose(Log2);
     fclose(Log3);
 
-    printf("\nMemory Leaks:\n");
     DBG_MemoryPrint();
 
     printf("\nDone\n");
