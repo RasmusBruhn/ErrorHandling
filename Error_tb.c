@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <errno.h>
+#include <Debug2.h>
 
 #define ERR_PREFIX ERR1
 #define ERR_MAXARCHIVED 3
@@ -123,6 +124,9 @@ int main(int argc, char **argv)
     fclose(Log1);
     fclose(Log2);
     fclose(Log3);
+
+    printf("\nMemory Leaks:\n");
+    DBG_MemoryPrint();
 
     printf("\nDone\n");
 
