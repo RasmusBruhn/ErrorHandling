@@ -47,7 +47,7 @@ After including the header file you must define the 3 macro functions:
   - **Format**: The format of the message, follows printf standard.
   - **...**: The variables used in Format, follows printf standard.
 
-**void _[Prefix]_AddErrorForeign(const char *ExternalMessage, const char *Format, ...)**:
+**void _[Prefix]_ErrorAddExternal(const char *ExternalMessage, const char *Format, ...)**:
 - Sets the error message with reference to an external error message.
 - **Return**: Void
 - **Arguments**:

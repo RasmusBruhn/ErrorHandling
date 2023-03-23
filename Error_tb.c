@@ -2,12 +2,12 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <errno.h>
-#include <Debug2.h>
+//#include <Debug2.h>
 
 #define ERR_PREFIX ERR1
 #define ERR_MAXARCHIVED 3
 #define ERR_MAXLENGTH 10
-#include "Error2.h"
+#include "Error2.c"
 #define _ERR1_ErrorSet(Format, ...) __ERR1_ErrorSet(__FILE__, __LINE__, Format __VA_OPT__(,) __VA_ARGS__)
 #define _ERR1_ErrorAdd(Format, ...) __ERR1_ErrorAdd(__FILE__, __LINE__, Format __VA_OPT__(,) __VA_ARGS__)
 #define _ERR1_ErrorAddExternal(ExternalMessage, Format, ...) __ERR1_ErrorAddExternal(__FILE__, __LINE__, ExternalMessage, Format __VA_OPT__(,) __VA_ARGS__)
@@ -15,7 +15,7 @@
 #define ERR_PREFIX ERR2
 #define ERR_MAXARCHIVED 1
 #define ERR_MAXLENGTH 100
-#include "Error2.h"
+#include "Error2.c"
 #define _ERR2_ErrorSet(Format, ...) __ERR2_ErrorSet(__FILE__, __LINE__, Format __VA_OPT__(, ) __VA_ARGS__)
 #define _ERR2_ErrorAdd(Format, ...) __ERR2_ErrorAdd(__FILE__, __LINE__, Format __VA_OPT__(, ) __VA_ARGS__)
 #define _ERR2_ErrorAddExternal(ExternalMessage, Format, ...) __ERR2_ErrorAddExternal(__FILE__, __LINE__, ExternalMessage, Format __VA_OPT__(, ) __VA_ARGS__)
@@ -125,7 +125,7 @@ int main(int argc, char **argv)
     fclose(Log2);
     fclose(Log3);
 
-    DBG_MemoryPrint();
+    //DBG_MemoryPrint();
 
     printf("\nDone\n");
 
