@@ -61,6 +61,10 @@ void ERR_ERRORCLEAR(void);
 // Undefine definitions
 #ifndef ERR_BUILD
 
+#ifndef ERR_INCLUDED3
+#define ERR_INCLUDED3
+#endif
+
 #undef ERR_ERRORCLEAR
 #undef ERR_ERRARCHIVE
 #undef ERR_ERRORGET

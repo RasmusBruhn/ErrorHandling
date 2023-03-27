@@ -14,5 +14,11 @@ else
 	DLLEXT = .o
 endif
 
-Error_tb$(EXEEXT) Error_tb.c Error2.c _Error2.h:
+Error_tb$(EXEEXT): Error_tb.c Error2.c _Error2.h
 	$(CC) $(CCFLAGS) Error_tb.c -o Error_tb$(EXEEXT)
+
+clean:
+	rm -r *.exe 
+	rm -r *_tb 
+	rm -r *.o 
+	rm -r *.dll
