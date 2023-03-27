@@ -20,7 +20,7 @@
 #define _ERR2_ErrorAdd(Format, ...) __ERR2_ErrorAdd(__FILE__, __LINE__, Format __VA_OPT__(, ) __VA_ARGS__)
 #define _ERR2_ErrorAddExternal(ExternalMessage, Format, ...) __ERR2_ErrorAddExternal(__FILE__, __LINE__, ExternalMessage, Format __VA_OPT__(, ) __VA_ARGS__)
 
-int main(int argc, char **argv)
+int main(__attribute__((unused)) int argc, __attribute__((unused)) char **argv)
 {
     int ErrorID = 0;
 
