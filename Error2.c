@@ -5,6 +5,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
+#include <Defines.h>
 #include "_Error2.h"
 
 // Set up logging
@@ -287,7 +288,7 @@ void __ERR_ERRORSET(const char *File, size_t Line, const char *Format, va_list V
 
     // Fill values
     ErrorMes->next = NULL;
-    snprintf(ErrorMes->mes, Length + 1, "\"%s\" line %lu: %s", File, Line, Mes);
+    snprintf(ErrorMes->mes, Length + 1, "\"%s\" line " PRINT_UINT64 ": %s", File, Line, Mes);
 
     if (PrevMes != NULL)
         snprintf(ErrorMes->mes + Length, ExtraLength + 1, " <- %s", PrevMes);
