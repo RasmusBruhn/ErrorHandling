@@ -1,3 +1,10 @@
+#include "ErrorLog.h"
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #ifndef ERR_PREFIX
 #define ERR_PREFIX ERR // The prefix used
 #endif
@@ -8,20 +15,6 @@
 
 #ifndef ERR_MAXLENGTH
 #define ERR_MAXLENGTH 1000 // The maximum length of the formatted error message, the actual error message can be longer
-#endif
-
-// Set up logging
-#ifndef ERR_INCLUDED
-#define ERR_INCLUDED
-
-// Sets the log file, will overwrite any existing log files
-// Returns nothing
-// File: The file pointer of the log file
-void ERR_LogCreate(FILE *File);
-
-// Removes the log file, make sure to run this before closing the file
-// Returns nothing
-void ERR_LogDestroy(void);
 #endif
 
 // Create names
@@ -46,24 +39,20 @@ void ERR_LogDestroy(void);
 // Returns nothing
 #define ERR_ERRORCLEAR ERR_SETUPNAME(ErrorClear, ERR_PREFIX)
 
-// Gets the error message
-// Returns a copy of the error string
-char *ERR_ERRORGET(void);
+    // Gets the error message
+    // Returns a copy of the error string
+    char *ERR_ERRORGET(void);
 
-// Gets the first archieved error
-// Returns the first archieved error, NULL if non are available
-char *ERR_ERRARCHIVE(void);
+    // Gets the first archieved error
+    // Returns the first archieved error, NULL if non are available
+    char *ERR_ERRARCHIVE(void);
 
-// Clears all of the errors
-// Returns nothing
-void ERR_ERRORCLEAR(void);
+    // Clears all of the errors
+    // Returns nothing
+    void ERR_ERRORCLEAR(void);
 
 // Undefine definitions
 #ifndef ERR_BUILD
-
-#ifndef ERR_INCLUDED3
-#define ERR_INCLUDED3
-#endif
 
 #undef ERR_ERRORCLEAR
 #undef ERR_ERRARCHIVE
@@ -82,4 +71,8 @@ void ERR_ERRORCLEAR(void);
 #undef ERR_MAXARCHIVED
 #undef ERR_PREFIX
 
+#endif
+
+#ifdef __cplusplus
+}
 #endif
