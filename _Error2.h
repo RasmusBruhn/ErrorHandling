@@ -1,19 +1,14 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include "_ErrorLog.h"
 
 #define ERR_BUILD
 #include "Error2.h"
 #undef ERR_BUILD
 
-// Set up logging
-#ifndef ERR_INCLUDED2
-#define ERR_INCLUDED2
-
-// Prints to the log file if it exists
-// Returns nothing
-void __ERR_LogPrint(const char *Mes);
-
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 // Cleans up everything when a memory error occures
@@ -129,3 +124,7 @@ void ERR_ERRORADDEXTERNAL(const char *File, size_t Line, const char *ExternalMes
 // ErrorType: If it is an error or warning
 // OverwriteMessage: If true then it will overwrite the last error message
 void __ERR_ERRORSET(const char *File, size_t Line, const char *Format, va_list VarArgs, const char *PrevMes, bool OverwriteMessage);
+
+#ifdef __cplusplus
+}
+#endif
