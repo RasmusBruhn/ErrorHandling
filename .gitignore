@@ -1,3 +1,6 @@
 *.exe
-Error_tb
-ErrorLog*
+*.o
+*.so
+*.dll
+*_tb
+ErrorLog*.txt

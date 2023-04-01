@@ -23,7 +23,7 @@
 int main(__attribute__((unused)) int argc, __attribute__((unused)) char **argv)
 {
     int ErrorID = 0;
-
+    
     // Test no error
     printf("Testing no error (%d):\n", ErrorID);
     printf("%s\n", ERR1_ErrorGet());

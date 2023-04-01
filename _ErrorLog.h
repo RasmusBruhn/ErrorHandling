@@ -1,11 +1,11 @@
 #ifndef ERRORLOG_INCLUDED2
 #define ERRORLOG_INCLUDED2
 
+#include "ErrorLog.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "ErrorLog.h"
 
 // Prints to the log file if it exists
 // Returns nothing
