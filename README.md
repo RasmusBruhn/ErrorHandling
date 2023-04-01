@@ -1,6 +1,11 @@
 # ErrorHandling documentation
 This is the documentation for the "Error2.h" header file (ERR). This header adds some error handling functions which makes it easier to do error handling, creating/retrieving an error can be done with a single printf-like function call and it can store an archive of messages. This header can be included multiple times given that the prefix is different.
 
+## Requirements:
+---
+Using this library requires the -lErrorLog library
+---
+
 ## Setup:
 ---
 To include this header into your project you should first set the settings by defining macro constant, then the header should be included:
@@ -24,7 +29,7 @@ After including the header file you must define the 3 macro functions:
 #define ERR_PREFIX ERR
 #define ERR_MAXLENGTH 1000
 #define ERR_MAXARCHIVED 100
-#include <Error2.h>
+#include <Error2.c>
 #define _ERR_ErrorSet(Format, ...) __ERR_ErrorSet(__FILE__, __LINE__, Format __VA_OPT__(,) __VA_ARGS__)
 #define _ERR_ErrorAdd(Format, ...) __ERR_ErrorAdd(__FILE__, __LINE__, Format __VA_OPT__(,) __VA_ARGS__)
 #define _ERR_ErrorAddExternal(ExternalMessage, Format, ...) __ERR_ErrorAddExternal(__FILE__, __LINE__, ExternalMessage, Format __VA_OPT__(,) __VA_ARGS__)
