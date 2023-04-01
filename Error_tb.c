@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <errno.h>
-//#include <Debug2.h>
+#include <Debug2.h>
 
 #define ERR_PREFIX ERR1
 #define ERR_MAXARCHIVED 3
@@ -125,7 +125,7 @@ int main(__attribute__((unused)) int argc, __attribute__((unused)) char **argv)
     fclose(Log2);
     fclose(Log3);
 
-    //DBG_MemoryPrint();
+    DBG_MemoryPrint();
 
     printf("\nDone\n");
 
